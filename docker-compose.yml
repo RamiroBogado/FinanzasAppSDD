@@ -1,0 +1,41 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      DB_PATH: /app/data/finanzas.db
+    volumes:
+      - finanzas_data:/app/data
+
+  ai:
+    build: ./ai
+    ports:
+      - "3002:3002"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_started
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+
+  app:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_PROXY_BACKEND: http://backend:3001
+      VITE_PROXY_AI: http://ai:3002
+    depends_on:
+      backend:
+        condition: service_started
+      ai:
+        condition: service_started
+
+volumes:
+  finanzas_data:

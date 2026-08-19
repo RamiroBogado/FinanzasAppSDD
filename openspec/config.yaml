@@ -1,0 +1,196 @@
+schema: spec-driven
+
+context: |
+  FinanzasApp es una aplicación web de finanzas personales multiusuario desarrollada como monorepo.
+
+  Objetivo de producto:
+  - Cada usuario puede gestionar sus ingresos, gastos, categorías, presupuestos y metas de ahorro.
+  - Cada usuario solamente puede acceder a sus propios datos financieros.
+  - Cada usuario posee un nombre de usuario único y un email único.
+  - El login se realiza mediante nombre de usuario y contraseña.
+  - El email se utiliza para el registro y la recuperación de contraseña.
+  - El chatbot de IA puede consultar los datos financieros del usuario autenticado, respetando exactamente el mismo aislamiento y autorización.
+  - La aplicación debe permitir seleccionar una moneda para trabajar. ARS (pesos argentinos) será la moneda inicial/predefinida. La arquitectura debe permitir incorporar otras monedas posteriormente sin rediseñar las entidades financieras.
+
+  Identidad de usuario:
+  - El username es obligatorio y único.
+  - El email es obligatorio y único.
+  - El username no debe contener espacios.
+  - El username puede contener letras, números y guion bajo (_).
+  - La comparación del username debe ser case-insensitive; Rama y rama representan el mismo username.
+  - El login utiliza username + contraseña.
+  - El email no se utiliza como identificador de login.
+  - La recuperación de contraseña utiliza el email asociado a la cuenta.
+  - Las contraseñas nunca deben almacenarse en texto plano.
+
+  Arquitectura:
+  - backend/: Node.js + Express + SQLite mediante better-sqlite3.
+  - frontend/: React 18 + Vite + Tailwind CSS + React Router.
+  - ai/: FastAPI + LangChain + Ollama.
+  - El frontend se comunica con backend mediante API REST.
+  - El frontend utiliza un proxy Vite para /api → backend:3001 y /ai → ai:3002.
+  - Las rutas que comienzan con /ai no deben anteponer /api.
+  - backend y ai comparten autenticación JWT.
+  - ai y backend utilizan la misma base de datos finanzas.db cuando el entorno lo requiera.
+  - El servicio de IA utiliza una abstracción VectorStoreProvider para permitir migrar de InMemoryVectorStore a ChromaDB posteriormente.
+
+  Backend:
+  - Puerto: 3001.
+  - API REST organizada por recurso.
+  - Autenticación mediante JWT.
+  - Contraseñas mediante bcryptjs.
+  - JWT mediante jsonwebtoken.
+  - SQLite mediante better-sqlite3.
+  - Las fechas persistidas y expuestas por API utilizan formato ISO YYYY-MM-DD.
+  - El schema inicial se crea mediante CREATE TABLE IF NOT EXISTS.
+  - Los cambios de columnas para bases de datos existentes deben gestionarse mediante bloques de ALTER guiados por PRAGMA table_info.
+  - No utilizar un sistema de migraciones externo salvo que un change futuro lo justifique explícitamente.
+  - Las respuestas y mensajes de error de la API deben estar en español.
+  - Las búsquedas reutilizables deben centralizarse en helpers cuando corresponda.
+  - Los filtros numéricos deberán contemplar formatos como 15000, 15.000 y 1.500,00 cuando la funcionalidad de búsqueda por monto lo requiera.
+  - Las exportaciones previstas son CSV, PDF y XLSX.
+  - La exportación PDF deberá incluir un resumen de totales cuando corresponda.
+  - Todas las operaciones sobre datos financieros deben filtrar y autorizar por el usuario autenticado.
+
+  Frontend:
+  - React 18 + Vite + Tailwind CSS.
+  - React Router para navegación.
+  - Estado global de autenticación mediante Context/useAuth.
+  - Las llamadas al backend deben centralizarse mediante un API helper.
+  - Utilizar arrow functions como convención de código.
+  - Los textos visibles de la interfaz deben estar en español.
+  - Las fechas recibidas desde API y utilizadas internamente deben respetar el formato ISO YYYY-MM-DD.
+  - Las fechas mostradas en UI utilizan formato dd/mm/yyyy mediante un helper reutilizable.
+  - El frontend debe respetar el proxy Vite definido para backend e IA.
+  - El usuario autenticado debe identificarse mediante su username en la interfaz cuando corresponda.
+
+  IA:
+  - FastAPI en puerto 3002.
+  - LangChain.
+  - Ollama con llama3.2 y nomic-embed-text.
+  - Chatbot RAG.
+  - VectorStoreProvider como abstracción del almacenamiento vectorial.
+  - Endpoints iniciales previstos: /chatbot/message y /chatbot/clear.
+  - Los endpoints de IA deben validar el mismo JWT utilizado por backend.
+  - El chatbot solamente puede consultar información perteneciente al usuario autenticado.
+  - El contexto utilizado por el chatbot debe estar asociado al usuario autenticado.
+  - Una consulta realizada por un usuario nunca debe recuperar información financiera perteneciente a otro usuario.
+
+  Funcionalidades iniciales del producto:
+  - Registro mediante username, email y contraseña.
+  - Login mediante username y contraseña.
+  - JWT.
+  - Logout.
+  - Recuperación de contraseña mediante email.
+  - Ingresos.
+  - Gastos.
+  - Categorías.
+  - Presupuestos.
+  - Metas de ahorro.
+  - Dashboard.
+  - Exportación CSV/PDF/XLSX.
+  - Chatbot de IA con acceso controlado a los datos financieros del usuario.
+  - No se implementarán cuentas bancarias, billeteras ni tarjetas como entidades independientes en la primera versión.
+
+  Monedas:
+  - ARS (pesos argentinos) será la moneda inicial/predefinida.
+  - La arquitectura debe permitir seleccionar otras monedas posteriormente.
+  - La moneda debe poder asociarse a los datos financieros cuando corresponda.
+  - No implementar conversión automática entre monedas en la primera versión salvo que un change lo defina explícitamente.
+
+  Verificación:
+  - backend: npm run lint + npm test.
+  - backend: los tests utilizan Vitest y la base SQLite ':memory:' debe configurarse antes de importar el módulo de base de datos cuando corresponda.
+  - frontend: npm run lint + npm run build.
+  - frontend: el warning de Vite relacionado con chunks mayores a 500 kB es preexistente/aceptable mientras no existan otros errores.
+  - ai: .\.venv\Scripts\python.exe -m pytest -q.
+  - Cada change debe verificar las capas que haya modificado.
+
+  Docker:
+  - docker compose up -d --build app debe permitir levantar la aplicación.
+  - Backend: 3001.
+  - IA: 3002.
+  - Ollama: 11434.
+  - El volumen finanzas_data persiste /app/data/finanzas.db.
+  - El seed inicial debe ser idempotente.
+  - Tras cada merge a main se debe reconstruir el contenedor y validar la aplicación en UI con Ctrl+Shift+R.
+
+  Convenciones:
+  - Código sin comentarios explicativos salvo necesidad estricta.
+  - Verbos y textos de UI en español.
+  - Identificadores de código en inglés.
+  - Commits en inglés.
+  - Mensajes de error en español.
+  - Los datos financieros deben estar aislados por usuario en todas las capas.
+  - No asumir que archivos, endpoints, componentes o entidades descritos en este contexto ya existen; deben crearse cuando corresponda mediante changes de OpenSpec.
+
+rules:
+  proposal:
+    - Redactar en español, como issues y PRs del proyecto.
+    - Cubrir Why, What Changes, Capabilities e Impact.
+    - Las capacidades deben utilizar kebab-case y seguir la organización existente de openspec/specs/.
+    - En Impact indicar explícitamente qué capas se afectan: backend, frontend y/o ai.
+    - En Impact indicar si existe cambio de schema SQLite.
+    - No asumir comportamiento que no esté confirmado en el repositorio, en las specs o en este contexto.
+    - No agregar funcionalidades fuera del alcance declarado del change.
+
+  specs:
+    - Redactar en español.
+    - Los textos de UI utilizados en escenarios deben coincidir con los textos reales de la aplicación.
+    - Utilizar SHALL o MUST y evitar should/may.
+    - Utilizar escenarios con #### Scenario y WHEN/THEN.
+    - Cada requirement debe tener al menos un escenario.
+    - Las capacidades nuevas deben abrir con ## Purpose.
+    - No agregar Purpose en deltas de capacidades existentes.
+    - MODIFIED exige el bloque completo del requirement.
+    - ADDED se utiliza cuando no cambia comportamiento existente.
+    - Los escenarios deben describir comportamiento observable y verificable.
+    - No inventar endpoints, componentes, tablas, columnas, servicios o variables de entorno.
+    - Las reglas de username deben especificar validación, unicidad y comparación case-insensitive cuando la capacidad de autenticación las afecte.
+    - Los escenarios de autenticación deben distinguir claramente username para login y email para recuperación de contraseña.
+
+  design:
+    - En Decisions incluir alternativas consideradas y la razón de la elección.
+    - En Risks / Trade-offs utilizar formato [Riesgo] → Mitigación.
+    - Si toca el schema SQLite, modificar tanto CREATE TABLE IF NOT EXISTS como el bloque de ALTER guiado por PRAGMA table_info cuando corresponda.
+    - Si cruza capas, detallar la integración entre frontend, backend y ai.
+    - Documentar explícitamente integración mediante proxy Vite, JWT compartido y VectorStoreProvider cuando sean relevantes.
+    - No introducir tecnologías nuevas sin justificar la decisión.
+    - Las decisiones de persistencia deben contemplar aislamiento por usuario para toda información financiera.
+
+  tasks:
+    - Utilizar checkboxes con formato - [ ] X.Y Descripción.
+    - Agrupar tareas en secciones ## numeradas.
+    - Mantener tareas pequeñas y verificables.
+    - Ordenar tareas por dependencia.
+    - Priorizar backend → tests backend → frontend → IA cuando el cambio cruce capas.
+    - Incluir una tarea de verificación por cada capa modificada.
+    - La granularidad debe ser razonablemente compatible con commits en inglés.
+    - No mezclar capas en una misma tarea salvo que la integración requiera cambios coordinados.
+    - Las tareas que modifiquen el schema SQLite deben contemplar tanto nuevas instalaciones como bases de datos existentes cuando corresponda.
+
+operations:
+  apply:
+    guidance:
+      - Leer AGENTS.md y .opencode/instructions.md antes de empezar.
+      - Leer las specs relevantes y todos los artefactos del change activo antes de implementar.
+      - Implementar únicamente lo requerido por las specs y tasks del change activo.
+      - No introducir refactors no relacionados con el change.
+      - No introducir funcionalidades nuevas fuera del alcance aprobado.
+      - Si una decisión durante la implementación contradice proposal, design o specs, detenerse y solicitar confirmación antes de continuar.
+      - Marcar tareas solamente después de completar y verificar su implementación.
+      - Marcar tareas de verificación solamente después de que el comando correspondiente haya pasado.
+      - No modificar openspec/specs/ directamente durante apply salvo que el workflow lo indique explícitamente.
+      - En PowerShell no utilizar &&; utilizar comandos compatibles con PowerShell.
+      - No cambiar de directorio mediante cd cuando exista workdir disponible en la herramienta.
+      - Antes de modificar código existente, inspeccionar el archivo y sus dependencias relevantes.
+      - Toda operación que lea, cree, modifique o elimine datos financieros debe respetar el usuario autenticado.
+      - No considerar completada una funcionalidad de autenticación si existe una ruta que permita acceder a datos de otro usuario.
+
+  archive:
+    guidance:
+      - Proporcionar un resumen conciso del resultado en español.
+      - Al archivar, sincronizar los cambios de specs con la spec fuente de verdad en openspec/specs/ cuando corresponda.
+      - Verificar que el merge semántico de specs haya quedado consistente.
+      - No archivar un change con tareas de implementación o verificación pendientes.
+      - Recordar que tras merge a main se debe reconstruir el contenedor Docker y validar la aplicación en UI con Ctrl+Shift+R.

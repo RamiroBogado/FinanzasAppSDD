@@ -1,9 +1,4 @@
-# transactions Specification
-
-## Purpose
-Permite a cada usuario registrar, consultar, modificar y eliminar sus ingresos y gastos personales, manteniendo el aislamiento total de los datos financieros según el usuario autenticado.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Creación de transacciones
 El sistema DEBE permitir crear una transacción propia mediante `POST /api/transactions` con un token JWT válido. La transacción DEBE contener `type` (`income` o `expense`), `amount` (número entero positivo en centavos de ARS) y `date` en formato ISO `YYYY-MM-DD`; si `date` se omite, DEBE tomarse la fecha actual. La descripción DEBE ser opcional y no superar los 255 caracteres. La categoría DEBE ser opcional, ser texto de hasta 32 caracteres y normalizarse a nula cuando llega vacía. Los errores de validación DEBEN responder código 400 con mensajes en español.
@@ -71,17 +66,6 @@ El sistema DEBE permitir listar las transacciones del usuario autenticado median
 - **WHEN** un usuario autenticado tiene transacciones y otro usuario consulta las suyas con los mismos filtros
 - **THEN** cada usuario recibe solo sus propias transacciones, sin datos del otro
 
-### Requirement: Consulta individual de una transacción
-El sistema DEBE permitir consultar una transacción propia mediante `GET /api/transactions/:id`. Si el id no existe o la transacción pertenece a otro usuario, el sistema DEBE responder 404 con un error en español, sin revelar la existencia de datos ajenos.
-
-#### Scenario: Consulta de una transacción propia
-- **WHEN** el usuario autenticado consulta el id de una transacción suya
-- **THEN** el sistema responde los datos de esa transacción
-
-#### Scenario: Consulta de una transacción de otro usuario
-- **WHEN** el usuario autenticado consulta el id de una transacción que pertenece a otro usuario
-- **THEN** el sistema responde 404 sin exponer información de la transacción
-
 ### Requirement: Actualización de transacciones
 El sistema DEBE permitir modificar una transacción propia mediante `PUT /api/transactions/:id` con las mismas validaciones que la creación, incluida la categoría opcional de hasta 32 caracteres. Si la transacción no existe o pertenece a otro usuario, el sistema DEBE responder 404. La actualización NUNCA DEBE cambiar el dueño de la transacción.
 
@@ -100,24 +84,6 @@ El sistema DEBE permitir modificar una transacción propia mediante `PUT /api/tr
 #### Scenario: Edición de una transacción ajena
 - **WHEN** el usuario autenticado intenta modificar una transacción de otro usuario
 - **THEN** el sistema responde 404 y la transacción no se modifica
-
-### Requirement: Eliminación de transacciones
-El sistema DEBE permitir eliminar una transacción propia mediante `DELETE /api/transactions/:id`. Si la transacción no existe o pertenece a otro usuario, el sistema DEBE responder 404. Una vez eliminada, la transacción NO DEBE aparecer en listados posteriores.
-
-#### Scenario: Eliminación exitosa
-- **WHEN** el usuario autenticado elimina una transacción suya
-- **THEN** el sistema la elimina y deja de mostrarla en los listados
-
-#### Scenario: Eliminación de una transacción ajena
-- **WHEN** el usuario autenticado intenta eliminar una transacción de otro usuario
-- **THEN** el sistema responde 404 y la transacción no se elimina
-
-### Requirement: Protección de transacciones sin sesión
-El sistema DEBE exigir un token JWT válido para cualquier operación sobre transacciones. Sin token o con token inválido o expirado, el sistema DEBE responder el error de autenticación correspondiente en español.
-
-#### Scenario: Acceso sin token
-- **WHEN** un usuario no autenticado envía una solicitud a cualquier endpoint de transacciones
-- **THEN** el sistema responde el error de autenticación en español y no expone ningún dato
 
 ### Requirement: Gestión de transacciones en la interfaz
 La interfaz protegida DEBE permitir al usuario autenticado crear, editar y eliminar sus transacciones, identificadas por su username. El formulario DEBE ofrecer la selección del tipo con las opciones `Ingreso` y `Gasto`, el monto, la fecha, la descripción y la categoría opcional con opciones sugeridas, con el botón `Agregar transacción`. El listado DEBE mostrar la fecha en formato `dd/mm/aaaa`, el monto con formato de moneda ARS (símbolo `$`, separador de miles y dos decimales), la descripción y la categoría cuando exista. El sistema DEBE mostrar los totales de ingresos y gastos y el saldo con formato ARS, recalculados sobre el resultado filtrado. La interfaz DEBE ofrecer filtros por categoría, texto en la descripción y rango de fechas, con el botón `Limpiar filtros`, y DEBE mostrar los gastos por categoría con formato ARS. Los textos visibles DEBEN estar en español.

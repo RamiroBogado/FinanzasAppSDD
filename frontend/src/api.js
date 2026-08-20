@@ -29,8 +29,13 @@ export const api = {
   register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
   login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
   me: (token) => request('/auth/me', { token }),
-  listTransactions: (token, type) =>
-    request(`/transactions${type ? `?type=${type}` : ''}`, { token }),
+  listTransactions: (token, params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== '')
+    ).toString()
+
+    return request(`/transactions${query ? `?${query}` : ''}`, { token })
+  },
   createTransaction: (token, payload) =>
     request('/transactions', { method: 'POST', body: payload, token }),
   updateTransaction: (token, id, payload) =>

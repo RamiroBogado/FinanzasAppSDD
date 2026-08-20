@@ -14,13 +14,14 @@ const router = Router()
 const TRANSACTION_TYPES = ['income', 'expense']
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MAX_DESCRIPTION_LENGTH = 255
+const MAX_CATEGORY_LENGTH = 32
 
 function toToday() {
   return new Date().toISOString().slice(0, 10)
 }
 
 function validatePayload(body) {
-  const { type, amount, date, description } = body ?? {}
+  const { type, amount, date, description, category } = body ?? {}
 
   if (typeof type !== 'string' || !TRANSACTION_TYPES.includes(type)) {
     return { error: 'El tipo de transacción debe ser income o expense' }
@@ -42,12 +43,21 @@ function validatePayload(body) {
     return { error: 'La descripción no puede superar los 255 caracteres' }
   }
 
+  if (
+    category !== undefined &&
+    category !== null &&
+    (typeof category !== 'string' || category.length > MAX_CATEGORY_LENGTH)
+  ) {
+    return { error: 'La categoría no puede superar los 32 caracteres' }
+  }
+
   return {
     value: {
       type,
       amount,
       date: date ?? toToday(),
-      description: description === undefined ? null : description
+      description: description === undefined ? null : description,
+      category: typeof category === 'string' ? category.trim() || null : null
     }
   }
 }
@@ -67,13 +77,27 @@ router.post('/', (req, res) => {
 })
 
 router.get('/', (req, res) => {
-  const { type } = req.query
+  const { type, category, q, from, to } = req.query
 
   if (type && !TRANSACTION_TYPES.includes(type)) {
     return res.status(400).json({ error: 'El tipo de transacción debe ser income o expense' })
   }
 
-  const transactions = listTransactions(req.userId, type || undefined)
+  if (from !== undefined && (typeof from !== 'string' || !DATE_PATTERN.test(from))) {
+    return res.status(400).json({ error: 'La fecha debe tener formato AAAA-MM-DD' })
+  }
+
+  if (to !== undefined && (typeof to !== 'string' || !DATE_PATTERN.test(to))) {
+    return res.status(400).json({ error: 'La fecha debe tener formato AAAA-MM-DD' })
+  }
+
+  const transactions = listTransactions(req.userId, {
+    type: typeof type === 'string' ? type : undefined,
+    category: typeof category === 'string' ? category : undefined,
+    q: typeof q === 'string' ? q : undefined,
+    from: typeof from === 'string' ? from : undefined,
+    to: typeof to === 'string' ? to : undefined
+  })
 
   res.json(transactions.map(toPublicTransaction))
 })

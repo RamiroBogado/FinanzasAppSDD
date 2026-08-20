@@ -116,6 +116,30 @@ describe('creación de transacciones', () => {
 
     expect(status).toBe(400)
   })
+
+  it('crea una transacción con categoría', async () => {
+    const token = await registerAndLogin()
+    const { status, body } = await createTransaction(token, { category: 'Comida' })
+
+    expect(status).toBe(201)
+    expect(body.category).toBe('Comida')
+  })
+
+  it('rechaza una categoría de más de 32 caracteres', async () => {
+    const token = await registerAndLogin()
+    const { status, body } = await createTransaction(token, { category: 'a'.repeat(33) })
+
+    expect(status).toBe(400)
+    expect(body.error).toBe('La categoría no puede superar los 32 caracteres')
+  })
+
+  it('normaliza a null una categoría vacía o con solo espacios', async () => {
+    const token = await registerAndLogin()
+    const { status, body } = await createTransaction(token, { category: '   ' })
+
+    expect(status).toBe(201)
+    expect(body.category).toBeNull()
+  })
 })
 
 describe('listado de transacciones', () => {
@@ -165,6 +189,102 @@ describe('listado de transacciones', () => {
   })
 })
 
+describe('filtros del listado', () => {
+  it('filtra por categoría sin distinguir mayúsculas', async () => {
+    const token = await registerAndLogin()
+    await createTransaction(token, { category: 'Comida' })
+    await createTransaction(token, { category: 'Transporte', description: 'Sube' })
+    await createTransaction(token, { type: 'income', amount: 50000, category: 'Sueldo' })
+
+    const { body } = await request('/api/transactions?category=comida', { token })
+
+    expect(body).toHaveLength(1)
+    expect(body[0].category).toBe('Comida')
+  })
+
+  it('filtra por texto parcial en la descripción sin distinguir mayúsculas', async () => {
+    const token = await registerAndLogin()
+    await createTransaction(token, { description: 'Supermercado' })
+    await createTransaction(token, { description: 'Mercado Libre' })
+
+    const { body } = await request('/api/transactions?q=mercado', { token })
+
+    expect(body).toHaveLength(2)
+  })
+
+  it('trata los comodines de LIKE como texto literal', async () => {
+    const token = await registerAndLogin()
+    await createTransaction(token, { description: 'Suscripción 100% gratis' })
+    await createTransaction(token, { description: 'Pago completo' })
+
+    const { body } = await request('/api/transactions?q=100%25', { token })
+
+    expect(body).toHaveLength(1)
+  })
+
+  it('filtra por rango de fechas inclusivo', async () => {
+    const token = await registerAndLogin()
+    await createTransaction(token, { date: '2026-08-01' })
+    await createTransaction(token, { date: '2026-08-15' })
+    await createTransaction(token, { date: '2026-08-20' })
+
+    const { body } = await request('/api/transactions?from=2026-08-01&to=2026-08-15', { token })
+
+    expect(body).toHaveLength(2)
+  })
+
+  it('rechaza fechas inválidas en from y to', async () => {
+    const token = await registerAndLogin()
+    const responses = await Promise.all([
+      request('/api/transactions?from=01-08-2026', { token }),
+      request('/api/transactions?to=20/08/2026', { token })
+    ])
+
+    for (const response of responses) {
+      expect(response.status).toBe(400)
+    }
+  })
+
+  it('combina varios filtros a la vez', async () => {
+    const token = await registerAndLogin()
+    await createTransaction(token, {
+      category: 'Comida',
+      description: 'Supermercado',
+      date: '2026-08-10'
+    })
+    await createTransaction(token, {
+      category: 'Comida',
+      description: 'Verdulería',
+      date: '2026-08-12'
+    })
+    await createTransaction(token, {
+      category: 'Transporte',
+      description: 'Supermercado',
+      date: '2026-08-10'
+    })
+
+    const { body } = await request(
+      '/api/transactions?category=comida&q=super&from=2026-08-09&to=2026-08-11',
+      { token }
+    )
+
+    expect(body).toHaveLength(1)
+    expect(body[0].description).toBe('Supermercado')
+  })
+
+  it('los filtros no cruzan datos entre usuarios', async () => {
+    const tokenA = await registerAndLogin({ username: 'rama', email: 'rama@example.com' })
+    const tokenB = await registerAndLogin({ username: 'otro', email: 'otro@example.com' })
+    await createTransaction(tokenA, { category: 'Comida', description: 'Supermercado' })
+    await createTransaction(tokenB, { category: 'Comida', description: 'Verdulería' })
+
+    const { body } = await request('/api/transactions?category=comida', { token: tokenB })
+
+    expect(body).toHaveLength(1)
+    expect(body[0].description).toBe('Verdulería')
+  })
+})
+
 describe('consulta de una transacción', () => {
   it('devuelve una transacción propia', async () => {
     const token = await registerAndLogin()
@@ -210,6 +330,20 @@ describe('actualización de transacciones', () => {
 
     expect(status).toBe(200)
     expect(body).toMatchObject({ id: created.id, type: 'income', amount: 80000, date: '2026-08-22' })
+  })
+
+  it('modifica la categoría de una transacción propia', async () => {
+    const token = await registerAndLogin()
+    const { body: created } = await createTransaction(token, { category: 'Comida' })
+
+    const { status, body } = await request(`/api/transactions/${created.id}`, {
+      method: 'PUT',
+      body: validTransaction({ category: 'Salud' }),
+      token
+    })
+
+    expect(status).toBe(200)
+    expect(body.category).toBe('Salud')
   })
 
   it('no modifica la transacción con datos inválidos', async () => {

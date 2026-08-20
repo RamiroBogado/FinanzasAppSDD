@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   amount INTEGER NOT NULL,
   date TEXT NOT NULL,
   description TEXT,
+  category TEXT,
   created_at TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
 )
@@ -36,6 +37,7 @@ const TRANSACTIONS_ALTERS = {
   amount: 'INTEGER NOT NULL DEFAULT 0',
   date: "TEXT NOT NULL DEFAULT ''",
   description: 'TEXT',
+  category: 'TEXT',
   created_at: "TEXT NOT NULL DEFAULT ''"
 }
 

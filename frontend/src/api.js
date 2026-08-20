@@ -40,5 +40,17 @@ export const api = {
     request('/transactions', { method: 'POST', body: payload, token }),
   updateTransaction: (token, id, payload) =>
     request(`/transactions/${id}`, { method: 'PUT', body: payload, token }),
-  deleteTransaction: (token, id) => request(`/transactions/${id}`, { method: 'DELETE', token })
+  deleteTransaction: (token, id) => request(`/transactions/${id}`, { method: 'DELETE', token }),
+  listBudgets: (token, params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== '')
+    ).toString()
+
+    return request(`/budgets${query ? `?${query}` : ''}`, { token })
+  },
+  createBudget: (token, payload) =>
+    request('/budgets', { method: 'POST', body: payload, token }),
+  updateBudget: (token, id, payload) =>
+    request(`/budgets/${id}`, { method: 'PUT', body: payload, token }),
+  deleteBudget: (token, id) => request(`/budgets/${id}`, { method: 'DELETE', token })
 }

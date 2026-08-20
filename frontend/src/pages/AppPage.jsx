@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, getToken } from '../api.js'
-import { useAuth } from '../context/AuthContext.jsx'
 import { formatAmount, formatDate, toLocalDate } from '../format.js'
 
 const SUGGESTED_CATEGORIES = [
@@ -27,7 +26,6 @@ const hasActiveFilters = (filters) =>
   Boolean(filters.category || filters.q || filters.from || filters.to)
 
 const AppPage = () => {
-  const { user, logout } = useAuth()
   const token = getToken()
   const [transactions, setTransactions] = useState([])
   const [categoryOptions, setCategoryOptions] = useState(SUGGESTED_CATEGORIES)
@@ -166,18 +164,8 @@ const AppPage = () => {
     }, {})
 
   return (
-    <main className="min-h-screen bg-slate-100 p-6">
+    <div>
       <div className="mx-auto max-w-2xl">
-        <header className="mb-6 flex items-center justify-between rounded-lg bg-white p-4 shadow">
-          <h1 className="text-2xl font-semibold text-slate-800">{user.username}</h1>
-          <button
-            onClick={logout}
-            className="rounded bg-slate-800 py-2 px-4 text-white hover:bg-slate-700"
-          >
-            Cerrar sesión
-          </button>
-        </header>
-
         {error && <p className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
 
         <section className="mb-6 grid grid-cols-3 gap-4">
@@ -419,7 +407,7 @@ const AppPage = () => {
           )}
         </section>
       </div>
-    </main>
+    </div>
   )
 }
 

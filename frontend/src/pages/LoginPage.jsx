@@ -16,7 +16,7 @@ const LoginPage = () => {
     setSubmitting(true)
     try {
       await login(username, password)
-      navigate('/app')
+      navigate('/dashboard')
     } catch (err) {
       setError(err.message)
     } finally {

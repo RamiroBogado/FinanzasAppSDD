@@ -120,7 +120,7 @@ El sistema DEBE exigir un token JWT válido para cualquier operación sobre tran
 - **THEN** el sistema responde el error de autenticación en español y no expone ningún dato
 
 ### Requirement: Gestión de transacciones en la interfaz
-La interfaz protegida DEBE permitir al usuario autenticado crear, editar y eliminar sus transacciones, identificadas por su username. El formulario DEBE ofrecer la selección del tipo con las opciones `Ingreso` y `Gasto`, el monto, la fecha, la descripción y la categoría opcional con opciones sugeridas, con el botón `Agregar transacción`. El listado DEBE mostrar la fecha en formato `dd/mm/aaaa`, el monto con formato de moneda ARS (símbolo `$`, separador de miles y dos decimales), la descripción y la categoría cuando exista. El sistema DEBE mostrar los totales de ingresos y gastos y el saldo con formato ARS, recalculados sobre el resultado filtrado. La interfaz DEBE ofrecer filtros por categoría, texto en la descripción y rango de fechas, con el botón `Limpiar filtros`, y DEBE mostrar los gastos por categoría con formato ARS. Los textos visibles DEBEN estar en español.
+La interfaz protegida DEBE estar organizada mediante una barra lateral de navegación con los accesos `Dashboard`, `Transacciones` y `Presupuestos`, e identificar al usuario autenticado por su username en la barra lateral junto a `Cerrar sesión`. La página `Transacciones` DEBE permitir al usuario autenticado crear, editar y eliminar sus transacciones. El formulario DEBE ofrecer la selección del tipo con las opciones `Ingreso` y `Gasto`, el monto, la fecha, la descripción y la categoría opcional con opciones sugeridas, con el botón `Agregar transacción`. El listado DEBE mostrar la fecha en formato `dd/mm/aaaa`, el monto con formato de moneda ARS (símbolo `$`, separador de miles y dos decimales), la descripción y la categoría cuando exista. El sistema DEBE mostrar los totales de ingresos y gastos y el saldo con formato ARS, recalculados sobre el resultado filtrado. La interfaz DEBE ofrecer filtros por categoría, texto en la descripción y rango de fechas, con el botón `Limpiar filtros`, y DEBE mostrar los gastos por categoría con formato ARS. Los textos visibles DEBEN estar en español.
 
 #### Scenario: Alta desde la interfaz
 - **WHEN** el usuario autenticado completa el formulario con tipo `Gasto`, monto, fecha, descripción y categoría `Comida` y presiona `Agregar transacción`
@@ -149,3 +149,7 @@ La interfaz protegida DEBE permitir al usuario autenticado crear, editar y elimi
 #### Scenario: Limpiar filtros
 - **WHEN** el usuario autenticado presiona `Limpiar filtros` habiendo aplicado filtros
 - **THEN** el listado y los totales vuelven a mostrar todas sus transacciones
+
+#### Scenario: Acceso desde la navegación
+- **WHEN** el usuario autenticado selecciona `Transacciones` en la barra lateral
+- **THEN** el sistema muestra su gestión de transacciones e identifica al usuario por su username en la barra lateral

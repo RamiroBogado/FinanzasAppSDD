@@ -54,3 +54,7 @@ El proyecto se desarrolla como un monorepo con tres capas:
 
 \- No agregar comentarios explicativos al código salvo que sean estrictamente necesarios.
 
+\- Todas las operaciones de Git/GitHub (commits, push, pull, merge, branch, PRs, issues) y el tablero de GitHub Projects deben delegarse al agente `git`; ningún otro agente debe ejecutar `git`, `gh` ni las herramientas MCP `github_*` directamente.
+
+\- El tablero del proyecto (GitHub Projects `@Board FinanzasAppSDD`, proyecto #3) debe reflejar el estado real de los changes de OpenSpec: `Todo`, `In Progress`, `Test`, `Done`. El proyecto `FinanzasApp - Kanban` (#2) corresponde a otro repo y no se toca.
+

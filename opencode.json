@@ -1,0 +1,31 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "*": "allow",
+      "git": "deny",
+      "git *": "deny",
+      "gh": "deny",
+      "gh *": "deny"
+    },
+    "github_*": "deny"
+  },
+  "mcp": {
+    "github": {
+      "type": "local",
+      "command": [
+        "docker",
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e",
+        "GITHUB_TOOLSETS=projects,issues",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "enabled": true,
+      "timeout": 30000
+    }
+  }
+}

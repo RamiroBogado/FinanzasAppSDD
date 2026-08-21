@@ -11,6 +11,7 @@ import {
   PanelLeftOpen,
   PiggyBank,
   Sun,
+  Target,
   Wallet,
   X
 } from 'lucide-react'
@@ -23,7 +24,8 @@ const COLLAPSE_KEY = 'finanzasapp-sidebar-collapsed'
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight },
-  { to: '/presupuestos', label: 'Presupuestos', icon: PiggyBank }
+  { to: '/presupuestos', label: 'Presupuestos', icon: PiggyBank },
+  { to: '/metas', label: 'Metas', icon: Target }
 ]
 
 const navLinkClass = ({ isActive }, collapsed) =>

@@ -52,5 +52,10 @@ export const api = {
     request('/budgets', { method: 'POST', body: payload, token }),
   updateBudget: (token, id, payload) =>
     request(`/budgets/${id}`, { method: 'PUT', body: payload, token }),
-  deleteBudget: (token, id) => request(`/budgets/${id}`, { method: 'DELETE', token })
+  deleteBudget: (token, id) => request(`/budgets/${id}`, { method: 'DELETE', token }),
+  listGoals: (token) => request('/goals', { token }),
+  createGoal: (token, payload) => request('/goals', { method: 'POST', body: payload, token }),
+  updateGoal: (token, id, payload) =>
+    request(`/goals/${id}`, { method: 'PUT', body: payload, token }),
+  deleteGoal: (token, id) => request(`/goals/${id}`, { method: 'DELETE', token })
 }

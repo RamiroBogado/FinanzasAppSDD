@@ -6,6 +6,7 @@ import { ToastProvider } from './components/ui/ToastProvider.jsx'
 import AppPage from './pages/AppPage.jsx'
 import BudgetPage from './pages/BudgetPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
+import GoalPage from './pages/GoalPage.jsx'
 import HomePage from './pages/HomePage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')).render(
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/transacciones" element={<AppPage />} />
                 <Route path="/presupuestos" element={<BudgetPage />} />
+                <Route path="/metas" element={<GoalPage />} />
               </Route>
             </Routes>
           </ToastProvider>

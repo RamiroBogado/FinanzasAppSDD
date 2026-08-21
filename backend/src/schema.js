@@ -43,6 +43,23 @@ const CREATE_BUDGETS_INDEX_SQL = `
 CREATE INDEX IF NOT EXISTS idx_budgets_user_month ON budgets (user_id, month)
 `
 
+const CREATE_GOALS_SQL = `
+CREATE TABLE IF NOT EXISTS goals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  target_amount INTEGER NOT NULL,
+  saved_amount INTEGER NOT NULL DEFAULT 0,
+  deadline TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+)
+`
+
+const CREATE_GOALS_INDEX_SQL = `
+CREATE INDEX IF NOT EXISTS idx_goals_user_created ON goals (user_id, created_at DESC)
+`
+
 const USERS_ALTERS = {
   password_hash: "TEXT NOT NULL DEFAULT ''",
   created_at: "TEXT NOT NULL DEFAULT ''"
@@ -63,6 +80,15 @@ const BUDGETS_ALTERS = {
   category: "TEXT NOT NULL DEFAULT ''",
   month: "TEXT NOT NULL DEFAULT ''",
   amount: 'INTEGER NOT NULL DEFAULT 0',
+  created_at: "TEXT NOT NULL DEFAULT ''"
+}
+
+const GOALS_ALTERS = {
+  user_id: 'INTEGER NOT NULL DEFAULT 0',
+  name: "TEXT NOT NULL DEFAULT ''",
+  target_amount: 'INTEGER NOT NULL DEFAULT 0',
+  saved_amount: 'INTEGER NOT NULL DEFAULT 0',
+  deadline: 'TEXT',
   created_at: "TEXT NOT NULL DEFAULT ''"
 }
 
@@ -89,6 +115,8 @@ export function initSchema(db) {
   ensureTable(db, 'users', CREATE_USERS_SQL, USERS_ALTERS)
   ensureTable(db, 'transactions', CREATE_TRANSACTIONS_SQL, TRANSACTIONS_ALTERS)
   ensureTable(db, 'budgets', CREATE_BUDGETS_SQL, BUDGETS_ALTERS)
+  ensureTable(db, 'goals', CREATE_GOALS_SQL, GOALS_ALTERS)
   db.exec(CREATE_TRANSACTIONS_INDEX_SQL)
   db.exec(CREATE_BUDGETS_INDEX_SQL)
+  db.exec(CREATE_GOALS_INDEX_SQL)
 }

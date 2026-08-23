@@ -24,6 +24,7 @@ import Field from '../components/ui/Field.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
 import Skeleton from '../components/ui/Skeleton.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
+import StatCard from '../components/ui/StatCard.jsx'
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx'
 import { useToast } from '../components/ui/ToastProvider.jsx'
 
@@ -232,25 +233,22 @@ const AppPage = () => {
 
   const summaryCards = [
     {
-      label: 'Total de ingresos',
+      label: 'Ingresos',
       value: formatAmount(totalIncome),
       icon: ArrowUpRight,
-      iconClass: 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400',
-      valueClass: 'text-green-600'
+      tone: 'success'
     },
     {
-      label: 'Total de gastos',
+      label: 'Gastos',
       value: formatAmount(totalExpense),
       icon: ArrowDownRight,
-      iconClass: 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400',
-      valueClass: 'text-red-600'
+      tone: 'danger'
     },
     {
-      label: 'Saldo',
+      label: 'Balance',
       value: formatAmount(balance),
       icon: Wallet,
-      iconClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400',
-      valueClass: balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600'
+      tone: 'brand'
     }
   ]
 
@@ -266,21 +264,8 @@ const AppPage = () => {
       />
 
       <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {summaryCards.map(({ label, value, icon: Icon, iconClass, valueClass }) => (
-          <div
-            key={label}
-            className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900"
-          >
-            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>
-              <Icon size={18} aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {label}
-              </p>
-              <p className={`text-lg font-bold ${valueClass}`}>{value}</p>
-            </div>
-          </div>
+        {summaryCards.map(({ label, value, icon: Icon, tone }) => (
+          <StatCard key={label} label={label} value={value} icon={Icon} tone={tone} />
         ))}
       </section>
 
@@ -489,8 +474,8 @@ const AppPage = () => {
                   </div>
                   <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                     <span
-                      className={`mr-1 text-sm font-semibold ${
-                        isIncome ? 'text-green-600' : 'text-red-600'
+                      className={`amount mr-1 text-sm font-semibold ${
+                        isIncome ? 'text-success-600 dark:text-success-500' : 'text-red-600'
                       }`}
                     >
                       {isIncome ? '+' : '-'}
@@ -527,7 +512,7 @@ const AppPage = () => {
             {Object.entries(expensesByCategory).map(([category, amount]) => (
               <li key={category} className="flex items-center justify-between py-2.5">
                 <span className="text-sm text-slate-700 dark:text-slate-300">{category}</span>
-                <span className="text-sm font-medium text-red-600">{formatAmount(amount)}</span>
+                <span className="amount text-sm font-medium text-red-600">{formatAmount(amount)}</span>
               </li>
             ))}
           </ul>

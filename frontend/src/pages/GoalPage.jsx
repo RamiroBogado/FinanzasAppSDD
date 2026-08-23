@@ -283,7 +283,7 @@ const GoalPage = () => {
                             </span>
                           )}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                        <p className="amount text-xs text-slate-500 dark:text-slate-400">
                           {formatAmount(goal.savedAmount)} de {formatAmount(goal.targetAmount)}
                           {goal.deadline && !overdue && !completed && (
                             <> · vence {formatDate(goal.deadline)}</>

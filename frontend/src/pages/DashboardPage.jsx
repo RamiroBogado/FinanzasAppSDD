@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { ArrowDownRight, ArrowUpRight, PieChart as PieChartIcon, ReceiptText, Wallet } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, PieChart as PieChartIcon, ReceiptText, Target, Wallet } from 'lucide-react'
 import { api, getToken } from '../api.js'
 import { formatAmount, formatDate } from '../format.js'
 import Skeleton from '../components/ui/Skeleton.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
+import StatCard from '../components/ui/StatCard.jsx'
 
 const DONUT_COLORS = [
   '#6366f1',
@@ -36,13 +37,16 @@ const DashboardSkeleton = () => (
 const DashboardPage = () => {
   const token = getToken()
   const [transactions, setTransactions] = useState([])
+  const [goals, setGoals] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api
-      .listTransactions(token)
-      .then(setTransactions)
+    Promise.all([api.listTransactions(token), api.listGoals(token).catch(() => [])])
+      .then(([transactionData, goalData]) => {
+        setTransactions(transactionData)
+        setGoals(goalData)
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [token])
@@ -55,6 +59,7 @@ const DashboardPage = () => {
   const totalIncome = totalByType('income')
   const totalExpense = totalByType('expense')
   const balance = totalIncome - totalExpense
+  const totalSaved = goals.reduce((sum, goal) => sum + (goal.savedAmount ?? 0), 0)
 
   const expensesByCategory = transactions
     .filter((transaction) => transaction.type === 'expense' && transaction.category)
@@ -68,9 +73,10 @@ const DashboardPage = () => {
   const recentTransactions = transactions.slice(0, 10)
 
   const summaryCards = [
-    { label: 'Total de ingresos', value: formatAmount(totalIncome), icon: ArrowUpRight, iconClass: 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400', valueClass: 'text-green-600' },
-    { label: 'Total de gastos', value: formatAmount(totalExpense), icon: ArrowDownRight, iconClass: 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400', valueClass: 'text-red-600' },
-    { label: 'Saldo', value: formatAmount(balance), icon: Wallet, iconClass: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400', valueClass: balance >= 0 ? 'text-slate-900 dark:text-white' : 'text-red-600' }
+    { label: 'Ingresos', value: formatAmount(totalIncome), icon: ArrowUpRight, tone: 'success' },
+    { label: 'Gastos', value: formatAmount(totalExpense), icon: ArrowDownRight, tone: 'danger' },
+    { label: 'Balance', value: formatAmount(balance), icon: Wallet, tone: 'brand' },
+    { label: 'Ahorrado en metas', value: formatAmount(totalSaved), icon: Target, tone: 'warning' }
   ]
 
   return (
@@ -87,20 +93,9 @@ const DashboardPage = () => {
         <DashboardSkeleton />
       ) : (
         <>
-          <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {summaryCards.map(({ label, value, icon: Icon, iconClass, valueClass }) => (
-              <div
-                key={label}
-                className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900"
-              >
-                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>
-                  <Icon size={20} aria-hidden="true" />
-                </span>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
-                  <p className={`text-xl font-bold ${valueClass}`}>{value}</p>
-                </div>
-              </div>
+          <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {summaryCards.map(({ label, value, icon: Icon, tone }) => (
+              <StatCard key={label} label={label} value={value} icon={Icon} tone={tone} />
             ))}
           </section>
 
@@ -143,7 +138,7 @@ const DashboardPage = () => {
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                       Total gastado
                     </p>
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                    <p className="amount text-lg font-bold text-slate-900 dark:text-white">
                       {formatAmount(totalExpense)}
                     </p>
                   </div>
@@ -167,7 +162,7 @@ const DashboardPage = () => {
                         />
                         {category}
                       </span>
-                      <span className="text-sm font-medium text-red-600">{formatAmount(amount)}</span>
+                      <span className="amount text-sm font-medium text-red-600">{formatAmount(amount)}</span>
                     </li>
                   ))}
                 </ul>
@@ -182,7 +177,10 @@ const DashboardPage = () => {
             ) : (
               <ul className="divide-y divide-slate-100 dark:divide-slate-800">
                 {recentTransactions.map((transaction) => (
-                  <li key={transaction.id} className="flex items-center justify-between py-2.5">
+                  <li
+                    key={transaction.id}
+                    className="flex items-center justify-between rounded-lg px-2 py-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
                     <div>
                       <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                         {transaction.description ||
@@ -198,9 +196,9 @@ const DashboardPage = () => {
                       </p>
                     </div>
                     <span
-                      className={`text-sm font-semibold ${
+                      className={`amount text-sm font-semibold ${
                         transaction.type === 'income'
-                          ? 'text-green-600'
+                          ? 'text-success-600 dark:text-success-500'
                           : 'text-red-600'
                       }`}
                     >

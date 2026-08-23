@@ -128,7 +128,7 @@ const AppLayout = () => {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
             <Wallet size={18} aria-hidden="true" />
           </span>
-          <span className="text-lg font-bold text-slate-900 dark:text-white">FinanzasApp</span>
+          <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">FinanzasApp</span>
         </div>
         <button
           type="button"

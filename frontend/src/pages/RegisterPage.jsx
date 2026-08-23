@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Wallet } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
+import AuthLayout from '../components/AuthLayout.jsx'
 import Button from '../components/ui/Button.jsx'
 import Input from '../components/ui/Input.jsx'
 
@@ -30,20 +31,8 @@ const RegisterPage = () => {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-indigo-50 px-4 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950/40">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-md dark:border-slate-800 dark:bg-slate-900"
-      >
-        <div className="mb-6 flex flex-col items-center">
-          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
-            <Wallet size={24} aria-hidden="true" />
-          </span>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Crear cuenta</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Empezá a controlar tus finanzas hoy
-          </p>
-        </div>
+    <AuthLayout title="Crear cuenta" subtitle="Empezá a controlar tus finanzas hoy">
+      <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Nombre de usuario
@@ -103,7 +92,7 @@ const RegisterPage = () => {
           </Link>
         </p>
       </form>
-    </main>
+    </AuthLayout>
   )
 }
 

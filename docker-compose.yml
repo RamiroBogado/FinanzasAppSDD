@@ -16,9 +16,26 @@ services:
       - "3002:3002"
     environment:
       OLLAMA_HOST: http://ollama:11434
+      JWT_SECRET: finanzasapp-dev-secret
+      DB_PATH: /app/data/finanzas.db
+    volumes:
+      - finanzas_data:/app/data
     depends_on:
       ollama:
         condition: service_started
+
+  ollama-init:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_started
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - "ollama pull llama3.1:8b && ollama pull nomic-embed-text"
+    restart: "no"
 
   ollama:
     image: ollama/ollama:latest

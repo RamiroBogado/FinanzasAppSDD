@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageCircle,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
@@ -16,6 +17,7 @@ import {
   X
 } from 'lucide-react'
 import { Dialog, DialogPanel } from '@headlessui/react'
+import ChatWidget from './ChatWidget.jsx'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 
@@ -93,6 +95,7 @@ const AppLayout = () => {
     () => localStorage.getItem(COLLAPSE_KEY) === 'true'
   )
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
 
   const toggleCollapsed = () =>
     setCollapsed((current) => {
@@ -161,6 +164,18 @@ const AppLayout = () => {
       >
         <Outlet />
       </main>
+
+      <button
+        type="button"
+        onClick={() => setChatOpen(true)}
+        title="Abrir asistente financiero"
+        aria-label="Abrir asistente financiero"
+        className="fixed bottom-4 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-colors hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 md:bottom-6 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+      >
+        <MessageCircle size={24} aria-hidden="true" />
+      </button>
+
+      <ChatWidget open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   )
 }

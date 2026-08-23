@@ -3,6 +3,10 @@ import PropTypes from 'prop-types'
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  FileText,
   Filter,
   ListOrdered,
   PieChart,
@@ -11,6 +15,7 @@ import {
   SearchX,
   Wallet
 } from 'lucide-react'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { api, getToken } from '../api.js'
 import { formatAmount, formatDate, toLocalDate } from '../format.js'
 import Button from '../components/ui/Button.jsx'
@@ -54,6 +59,12 @@ const SectionTitle = ({ icon: Icon, children }) => (
   </div>
 )
 
+const EXPORT_OPTIONS = [
+  { format: 'csv', label: 'Exportar CSV', icon: FileText },
+  { format: 'pdf', label: 'Exportar PDF', icon: FileText },
+  { format: 'xlsx', label: 'Exportar XLSX', icon: FileSpreadsheet }
+]
+
 SectionTitle.propTypes = {
   icon: PropTypes.elementType.isRequired,
   children: PropTypes.node.isRequired
@@ -70,6 +81,7 @@ const AppPage = () => {
   const [editingId, setEditingId] = useState(null)
   const [validationError, setValidationError] = useState(null)
   const [deletingTransaction, setDeletingTransaction] = useState(null)
+  const [exporting, setExporting] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const refresh = useCallback(
@@ -120,6 +132,19 @@ const AppPage = () => {
   const handleClearFilters = () => {
     setFilters(EMPTY_FILTERS)
     setAppliedFilters(EMPTY_FILTERS)
+  }
+
+  const handleExport = async (format) => {
+    setExporting(true)
+
+    try {
+      await api.exportTransactions(token, appliedFilters, format)
+      toast.showSuccess('Exportación descargada')
+    } catch (err) {
+      toast.showError(err.message)
+    } finally {
+      setExporting(false)
+    }
   }
 
   const handleSubmit = async (event) => {
@@ -262,9 +287,40 @@ const AppPage = () => {
       <section className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-4 flex items-center justify-between">
           <SectionTitle icon={Filter}>Filtros</SectionTitle>
-          <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-            Limpiar filtros
-          </Button>
+          <div className="flex items-center gap-2">
+            <Menu as="div" className="relative">
+              <MenuButton
+                as={Button}
+                variant="secondary"
+                size="sm"
+                disabled={exporting}
+              >
+                <Download size={14} aria-hidden="true" />
+                {exporting ? 'Exportando…' : 'Exportar'}
+                {!exporting && <ChevronDown size={14} aria-hidden="true" />}
+              </MenuButton>
+              <MenuItems
+                anchor="bottom end"
+                className="z-50 mt-2 w-44 rounded-lg border border-slate-200 bg-white p-1 shadow-lg focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+              >
+                {EXPORT_OPTIONS.map(({ format, label, icon: Icon }) => (
+                  <MenuItem key={format}>
+                    <button
+                      type="button"
+                      onClick={() => handleExport(format)}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 data-[focus]:bg-indigo-50 data-[focus]:text-indigo-700 dark:text-slate-200 dark:data-[focus]:bg-slate-800 dark:data-[focus]:text-white"
+                    >
+                      <Icon size={15} aria-hidden="true" />
+                      {label}
+                    </button>
+                  </MenuItem>
+                ))}
+              </MenuItems>
+            </Menu>
+            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+              Limpiar filtros
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Filtrar por categoría">

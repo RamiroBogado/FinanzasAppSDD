@@ -57,5 +57,31 @@ export const api = {
   createGoal: (token, payload) => request('/goals', { method: 'POST', body: payload, token }),
   updateGoal: (token, id, payload) =>
     request(`/goals/${id}`, { method: 'PUT', body: payload, token }),
-  deleteGoal: (token, id) => request(`/goals/${id}`, { method: 'DELETE', token })
+  deleteGoal: (token, id) => request(`/goals/${id}`, { method: 'DELETE', token }),
+  exportTransactions: async (token, params = {}, format) => {
+    const query = new URLSearchParams(
+      Object.entries({ ...params, format }).filter(([, value]) => value !== undefined && value !== '')
+    ).toString()
+
+    const response = await fetch(`/api/transactions/export?${query}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null)
+      throw new Error(data?.error || 'Error inesperado del servidor')
+    }
+
+    const disposition = response.headers.get('Content-Disposition') ?? ''
+    const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? `transacciones.${format}`
+    const url = URL.createObjectURL(await response.blob())
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
 }

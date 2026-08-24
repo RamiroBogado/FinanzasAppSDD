@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { api, getToken } from '../api.js'
-import { formatAmount, formatDate, toLocalDate } from '../format.js'
+import { formatAmount, formatDate, formatMonth, toLocalDate } from '../format.js'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import Field from '../components/ui/Field.jsx'
@@ -27,6 +27,7 @@ import EmptyState from '../components/ui/EmptyState.jsx'
 import StatCard from '../components/ui/StatCard.jsx'
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx'
 import { useToast } from '../components/ui/ToastProvider.jsx'
+import { periodRange, toMonthString, usePeriod } from '../context/PeriodContext.jsx'
 
 const SUGGESTED_CATEGORIES = [
   'Comida',
@@ -74,6 +75,7 @@ SectionTitle.propTypes = {
 const AppPage = () => {
   const token = getToken()
   const toast = useToast()
+  const { month, year } = usePeriod()
   const [transactions, setTransactions] = useState([])
   const [categoryOptions, setCategoryOptions] = useState(SUGGESTED_CATEGORIES)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -85,6 +87,13 @@ const AppPage = () => {
   const [exporting, setExporting] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const periodRangeValues = periodRange({ month, year })
+  const scopedFilters = {
+    ...appliedFilters,
+    from: appliedFilters.from || periodRangeValues.from,
+    to: appliedFilters.to || periodRangeValues.to
+  }
+
   const refresh = useCallback(
     (params) => {
       setLoading(true)
@@ -92,7 +101,7 @@ const AppPage = () => {
         .listTransactions(token, params)
         .then((data) => {
           setTransactions(data)
-          if (!hasActiveFilters(params)) {
+          if (!hasActiveFilters(appliedFilters)) {
             setCategoryOptions([
               ...new Set([
                 ...SUGGESTED_CATEGORIES,
@@ -104,12 +113,19 @@ const AppPage = () => {
         .catch((err) => toast.showError(err.message))
         .finally(() => setLoading(false))
     },
-    [token, toast]
+    [token, toast, appliedFilters]
   )
 
   useEffect(() => {
-    refresh(appliedFilters)
-  }, [appliedFilters, refresh])
+    refresh(scopedFilters)
+  }, [appliedFilters, month, year, refresh])
+
+  const recheckAlerts = () => {
+    api
+      .checkAlerts(token)
+      .then(() => window.dispatchEvent(new Event('alerts-updated')))
+      .catch(() => {})
+  }
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -139,7 +155,7 @@ const AppPage = () => {
     setExporting(true)
 
     try {
-      await api.exportTransactions(token, appliedFilters, format)
+      await api.exportTransactions(token, scopedFilters, format)
       toast.showSuccess('Exportación descargada')
     } catch (err) {
       toast.showError(err.message)
@@ -176,7 +192,8 @@ const AppPage = () => {
       }
       setForm(EMPTY_FORM)
       setValidationError(null)
-      refresh(appliedFilters)
+      recheckAlerts()
+      refresh(scopedFilters)
     } catch (err) {
       toast.showError(err.message)
     }
@@ -206,7 +223,8 @@ const AppPage = () => {
     try {
       await api.deleteTransaction(token, deletingTransaction.id)
       toast.showSuccess('Transacción eliminada')
-      refresh(appliedFilters)
+      recheckAlerts()
+      refresh(scopedFilters)
     } catch (err) {
       toast.showError(err.message)
     } finally {
@@ -259,7 +277,7 @@ const AppPage = () => {
         subtitle={
           editingId
             ? 'Modificá los datos y guardá los cambios.'
-            : 'Registrá tus ingresos y gastos y llevá el control de tu dinero.'
+            : `Registrá tus ingresos y gastos. Estás viendo ${formatMonth(toMonthString({ month, year }))}.`
         }
       />
 
@@ -425,7 +443,7 @@ const AppPage = () => {
             title={
               hasActiveFilters(appliedFilters)
                 ? 'Sin resultados con los filtros actuales'
-                : 'Aún no tenés transacciones'
+                : 'Sin transacciones en este período'
             }
             description={
               hasActiveFilters(appliedFilters)

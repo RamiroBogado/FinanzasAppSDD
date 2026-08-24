@@ -37,21 +37,23 @@ export function findBudgetById(id, userId) {
   return getDatabase().prepare(`${LIST_QUERY} AND b.id = ?`).get(userId, id)
 }
 
-export function createBudget({ userId, category, month, amount }) {
+export function createBudget({ userId, category, month, amount, threshold }) {
   const createdAt = new Date().toISOString().slice(0, 10)
   const result = getDatabase()
     .prepare(
-      'INSERT INTO budgets (user_id, category, month, amount, created_at) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO budgets (user_id, category, month, amount, threshold, created_at) VALUES (?, ?, ?, ?, ?, ?)'
     )
-    .run(userId, category, month, amount, createdAt)
+    .run(userId, category, month, amount, threshold, createdAt)
 
   return findBudgetById(result.lastInsertRowid, userId)
 }
 
-export function updateBudget(id, userId, { category, month, amount }) {
+export function updateBudget(id, userId, { category, month, amount, threshold }) {
   getDatabase()
-    .prepare('UPDATE budgets SET category = ?, month = ?, amount = ? WHERE id = ? AND user_id = ?')
-    .run(category, month, amount, id, userId)
+    .prepare(
+      'UPDATE budgets SET category = ?, month = ?, amount = ?, threshold = COALESCE(?, threshold) WHERE id = ? AND user_id = ?'
+    )
+    .run(category, month, amount, threshold, id, userId)
 
   return findBudgetById(id, userId)
 }
@@ -66,6 +68,7 @@ export function toPublicBudget(budget) {
     category: budget.category,
     month: budget.month,
     amount: budget.amount,
+    threshold: budget.threshold,
     spent: budget.spent,
     createdAt: budget.created_at
   }

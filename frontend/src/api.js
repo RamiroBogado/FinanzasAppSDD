@@ -77,6 +77,11 @@ export const api = {
   updateGoal: (token, id, payload) =>
     request(`/goals/${id}`, { method: 'PUT', body: payload, token }),
   deleteGoal: (token, id) => request(`/goals/${id}`, { method: 'DELETE', token }),
+  listAlerts: (token) => request('/alerts', { token }),
+  checkAlerts: (token, month) =>
+    request('/alerts/check', { method: 'POST', body: month ? { month } : {}, token }),
+  markAlertRead: (token, id) => request(`/alerts/${id}/read`, { method: 'PUT', token }),
+  markAllAlertsRead: (token) => request('/alerts/read-all', { method: 'POST', token }),
   exportTransactions: async (token, params = {}, format) => {
     const query = new URLSearchParams(
       Object.entries({ ...params, format }).filter(([, value]) => value !== undefined && value !== '')

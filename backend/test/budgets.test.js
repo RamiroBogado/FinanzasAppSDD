@@ -125,6 +125,33 @@ describe('creación de presupuestos', () => {
     expect(status).toBe(409)
     expect(body.error).toBe('Ya existe un presupuesto para esa categoría y mes')
   })
+
+  it('asigna el umbral por defecto de 80 cuando no se envía', async () => {
+    const token = await registerAndLogin()
+    const { status, body } = await createBudget(token)
+
+    expect(status).toBe(201)
+    expect(body.threshold).toBe(80)
+  })
+
+  it('crea con un umbral personalizado válido', async () => {
+    const token = await registerAndLogin()
+    const { status, body } = await createBudget(token, { threshold: 50 })
+
+    expect(status).toBe(201)
+    expect(body.threshold).toBe(50)
+  })
+
+  it('rechaza umbrales fuera del rango 1 a 100', async () => {
+    const token = await registerAndLogin()
+
+    for (const threshold of [0, 101, -5, 50.5, 'abc']) {
+      const { status, body } = await createBudget(token, { threshold })
+
+      expect(status).toBe(400)
+      expect(body.error).toBe('El umbral debe ser un número entero entre 1 y 100')
+    }
+  })
 })
 
 describe('listado de presupuestos', () => {
@@ -180,6 +207,15 @@ describe('listado de presupuestos', () => {
     expect(body[0].spent).toBe(5000)
   })
 
+  it('incluye el umbral configurado en el listado', async () => {
+    const token = await registerAndLogin()
+    await createBudget(token, { threshold: 60 })
+
+    const { body } = await request('/api/budgets', { token })
+
+    expect(body[0].threshold).toBe(60)
+  })
+
   it('el gastado no cruza datos entre usuarios', async () => {
     const tokenA = await registerAndLogin({ username: 'rama', email: 'rama@example.com' })
     const tokenB = await registerAndLogin({ username: 'otro', email: 'otro@example.com' })
@@ -231,6 +267,47 @@ describe('actualización de presupuestos', () => {
 
     expect(status).toBe(200)
     expect(body).toMatchObject({ id: created.id, amount: 150000 })
+  })
+
+  it('conserva el umbral existente al editar sin enviarlo', async () => {
+    const token = await registerAndLogin()
+    const { body: created } = await createBudget(token, { threshold: 90 })
+
+    const { status, body } = await request(`/api/budgets/${created.id}`, {
+      method: 'PUT',
+      body: { category: 'Comida', month: '2026-08', amount: 150000 },
+      token
+    })
+
+    expect(status).toBe(200)
+    expect(body.threshold).toBe(90)
+  })
+
+  it('actualiza el umbral cuando se envía uno válido', async () => {
+    const token = await registerAndLogin()
+    const { body: created } = await createBudget(token)
+
+    const { status, body } = await request(`/api/budgets/${created.id}`, {
+      method: 'PUT',
+      body: { category: 'Comida', month: '2026-08', amount: 100000, threshold: 40 },
+      token
+    })
+
+    expect(status).toBe(200)
+    expect(body.threshold).toBe(40)
+  })
+
+  it('rechaza un umbral inválido en la edición', async () => {
+    const token = await registerAndLogin()
+    const { body: created } = await createBudget(token)
+
+    const { status } = await request(`/api/budgets/${created.id}`, {
+      method: 'PUT',
+      body: { category: 'Comida', month: '2026-08', amount: 100000, threshold: 150 },
+      token
+    })
+
+    expect(status).toBe(400)
   })
 
   it('responde 409 al editar generando un duplicado', async () => {

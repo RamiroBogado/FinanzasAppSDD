@@ -1,9 +1,6 @@
 # dashboard Specification
 
-## Purpose
-Constituye la vista principal del área autenticada: resume los ingresos, gastos, saldo, gastos por categoría y últimos movimientos del usuario para orientar su gestión diaria.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Resumen de ingresos, gastos y saldo
 El dashboard DEBE mostrar el total de ingresos, el total de gastos y el saldo calculados sobre las transacciones del usuario autenticado correspondientes al período seleccionado en el selector global (mes y año), con formato de moneda ARS (símbolo `$`, separador de miles y dos decimales). Al cambiar el período, los totales DEBEN recalcularse. Los datos del dashboard NUNCA DEBEN incluir transacciones de otros usuarios.
@@ -27,6 +24,8 @@ El dashboard DEBE mostrar el total de gastos de cada categoría del usuario aute
 - **WHEN** el usuario autenticado visualiza el dashboard con gastos categorizados propios del período seleccionado
 - **THEN** el sistema muestra el total gastado de cada categoría presente en ese mes con formato ARS
 
+## ADDED Requirements
+
 ### Requirement: Evolución mensual en el dashboard
 El dashboard DEBE mostrar un gráfico de barras dobles con la evolución de los últimos 6 meses hasta el período seleccionado inclusive, representando los ingresos y los gastos de cada mes con colores semánticos consistentes (verde para ingresos, rojo para gastos) y montos con formato de moneda ARS. Si no hay movimientos en la ventana mostrada, DEBE presentarse un mensaje de vacío en español.
 
@@ -41,25 +40,3 @@ El dashboard DEBE mostrar un gráfico de barras dobles con la evolución de los 
 #### Scenario: Sin movimientos en la ventana
 - **WHEN** el usuario autenticado visualiza el gráfico de evolución sin movimientos en los últimos 6 meses
 - **THEN** el sistema muestra un mensaje de vacío en español
-
-### Requirement: Últimos movimientos en el dashboard
-El dashboard DEBE mostrar los últimos movimientos del usuario autenticado ordenados por fecha descendente (hasta 10), con fecha en formato `dd/mm/aaaa`, monto con formato de moneda ARS y descripción o categoría.
-
-#### Scenario: Últimos movimientos
-- **WHEN** el usuario autenticado visualiza el dashboard y tiene transacciones
-- **THEN** el sistema muestra sus transacciones más recientes con fecha en formato `dd/mm/aaaa` y monto en formato ARS
-
-#### Scenario: Sin movimientos
-- **WHEN** el usuario autenticado visualiza el dashboard sin transacciones
-- **THEN** el sistema muestra un mensaje de vacío en español
-
-### Requirement: Acceso al dashboard
-El dashboard DEBE ser la vista principal del área autenticada, accesible desde la barra lateral con el acceso `Dashboard`. El dashboard DEBE mostrar el username del usuario autenticado en la barra lateral junto a `Cerrar sesión`. Sin sesión válida, el sistema DEBE redirigir al inicio de sesión.
-
-#### Scenario: Acceso desde la navegación
-- **WHEN** el usuario autenticado selecciona `Dashboard` en la barra lateral
-- **THEN** el sistema muestra el dashboard con los datos del usuario autenticado
-
-#### Scenario: Acceso sin sesión
-- **WHEN** un usuario no autenticado intenta acceder al dashboard
-- **THEN** el sistema lo redirige al inicio de sesión

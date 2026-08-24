@@ -4,3 +4,4 @@ langchain
 langchain-ollama
 numpy
 pyjwt
+chromadb

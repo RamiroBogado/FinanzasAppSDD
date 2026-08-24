@@ -12,4 +12,7 @@ DB_PATH = os.getenv(
     os.path.join(_PROJECT_ROOT, "backend", "data", "finanzas.db"),
 )
 
+VECTOR_STORE = os.getenv("VECTOR_STORE", "memory")
+CHROMA_PATH = os.getenv("CHROMA_PATH", os.path.join(_PROJECT_ROOT, "chroma_data"))
+
 RETRIEVAL_LIMIT = 8

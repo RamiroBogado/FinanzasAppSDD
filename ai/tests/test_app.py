@@ -186,3 +186,61 @@ def test_clear_forces_rebuild_with_empty_data():
     provider.fingerprints = {1: (2,)}
 
     assert index.retrieve(1, "Dato") == []
+
+
+def make_chroma_index(provider: FakeDataProvider, calls: list):
+    from app.vectorstore import ChromaVectorStore
+
+    def counting_embed(text: str) -> list[float]:
+        calls.append(text)
+        return fake_embed(text)
+
+    return UserIndex(
+        embedder=counting_embed,
+        data_provider=provider,
+        store_factory=ChromaVectorStore,
+    )
+
+
+def test_persisted_fingerprint_skips_reindex(monkeypatch, tmp_path):
+    from app import config
+
+    monkeypatch.setattr(config, "CHROMA_PATH", str(tmp_path / "chroma"))
+
+    provider = FakeDataProvider()
+    provider.docs = {1: ["Gasto de comida"]}
+    provider.fingerprints = {1: (1,)}
+
+    calls = []
+    first = make_chroma_index(provider, calls)
+
+    assert first.retrieve(1, "Gasto de comida") == ["Gasto de comida"]
+    assert len(calls) == 2
+
+    second = make_chroma_index(provider, calls)
+
+    assert second.retrieve(1, "Gasto de comida") == ["Gasto de comida"]
+    assert len(calls) == 3
+
+
+def test_clear_removes_persisted_documents(monkeypatch, tmp_path):
+    from app import config
+
+    monkeypatch.setattr(config, "CHROMA_PATH", str(tmp_path / "chroma"))
+
+    provider = FakeDataProvider()
+    provider.docs = {1: ["Gasto de comida"]}
+    provider.fingerprints = {1: (1,)}
+
+    index = make_chroma_index(provider, [])
+
+    assert index.retrieve(1, "comida") == ["Gasto de comida"]
+
+    index.clear(1)
+
+    provider.docs = {1: []}
+    provider.fingerprints = {1: (2,)}
+
+    restarted = make_chroma_index(provider, [])
+
+    assert restarted.retrieve(1, "comida") == []

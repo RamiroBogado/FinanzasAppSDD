@@ -18,8 +18,11 @@ services:
       OLLAMA_HOST: http://ollama:11434
       JWT_SECRET: finanzasapp-dev-secret
       DB_PATH: /app/data/finanzas.db
+      VECTOR_STORE: chroma
+      CHROMA_PATH: /app/chroma
     volumes:
       - finanzas_data:/app/data
+      - chroma_data:/app/chroma
     depends_on:
       ollama:
         condition: service_started
@@ -57,3 +60,4 @@ services:
 
 volumes:
   finanzas_data:
+  chroma_data:

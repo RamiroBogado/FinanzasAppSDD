@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS budgets (
   category TEXT NOT NULL,
   month TEXT NOT NULL,
   amount INTEGER NOT NULL,
+  threshold INTEGER NOT NULL DEFAULT 80,
   created_at TEXT NOT NULL,
   UNIQUE (user_id, category COLLATE NOCASE, month),
   FOREIGN KEY (user_id) REFERENCES users(id)
@@ -41,6 +42,25 @@ CREATE TABLE IF NOT EXISTS budgets (
 
 const CREATE_BUDGETS_INDEX_SQL = `
 CREATE INDEX IF NOT EXISTS idx_budgets_user_month ON budgets (user_id, month)
+`
+
+const CREATE_ALERTS_SQL = `
+CREATE TABLE IF NOT EXISTS alerts (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  category TEXT NOT NULL,
+  month TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('warning', 'danger')),
+  message TEXT NOT NULL,
+  read INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  UNIQUE (user_id, category COLLATE NOCASE, month, type),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+)
+`
+
+const CREATE_ALERTS_INDEX_SQL = `
+CREATE INDEX IF NOT EXISTS idx_alerts_user_read ON alerts (user_id, read)
 `
 
 const CREATE_GOALS_SQL = `
@@ -80,6 +100,7 @@ const BUDGETS_ALTERS = {
   category: "TEXT NOT NULL DEFAULT ''",
   month: "TEXT NOT NULL DEFAULT ''",
   amount: 'INTEGER NOT NULL DEFAULT 0',
+  threshold: 'INTEGER NOT NULL DEFAULT 80',
   created_at: "TEXT NOT NULL DEFAULT ''"
 }
 
@@ -116,7 +137,9 @@ export function initSchema(db) {
   ensureTable(db, 'transactions', CREATE_TRANSACTIONS_SQL, TRANSACTIONS_ALTERS)
   ensureTable(db, 'budgets', CREATE_BUDGETS_SQL, BUDGETS_ALTERS)
   ensureTable(db, 'goals', CREATE_GOALS_SQL, GOALS_ALTERS)
+  ensureTable(db, 'alerts', CREATE_ALERTS_SQL, {})
   db.exec(CREATE_TRANSACTIONS_INDEX_SQL)
   db.exec(CREATE_BUDGETS_INDEX_SQL)
   db.exec(CREATE_GOALS_INDEX_SQL)
+  db.exec(CREATE_ALERTS_INDEX_SQL)
 }

@@ -1,9 +1,6 @@
 # budgets Specification
 
-## Purpose
-Permite a cada usuario definir un límite mensual de gasto por categoría y conocer cuánto lleva gastado en el período, manteniendo el aislamiento total de los datos por usuario.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Creación de presupuestos
 El sistema DEBE permitir crear un presupuesto propio mediante `POST /api/budgets` con un token JWT válido. El presupuesto DEBE contener `category` (texto obligatorio recortado de hasta 32 caracteres), `month` en formato `AAAA-MM` y `amount` (número entero positivo en centavos de ARS). DEBE aceptar un campo opcional `threshold` como número entero entre 1 y 100 que represente el porcentaje de umbral de aviso; si se omite, DEBE tomarse 80, y si es inválido el sistema DEBE responder 400 con un mensaje en español. Los demás errores de validación DEBEN responder código 400 con mensajes en español. Si ya existe un presupuesto para la misma categoría y mes, el sistema DEBE responder 409 con un mensaje en español, sin distinguir mayúsculas en la categoría.
@@ -59,17 +56,6 @@ El sistema DEBE permitir listar los presupuestos del usuario autenticado mediant
 - **WHEN** un usuario autenticado tiene presupuestos y otro usuario consulta los suyos
 - **THEN** cada usuario recibe solo sus propios presupuestos, sin datos del otro
 
-### Requirement: Consulta individual de un presupuesto
-El sistema DEBE permitir consultar un presupuesto propio mediante `GET /api/budgets/:id`, incluyendo el total `spent` del período. Si el id no existe o el presupuesto pertenece a otro usuario, el sistema DEBE responder 404 con un error en español, sin revelar la existencia de datos ajenos.
-
-#### Scenario: Consulta de un presupuesto propio
-- **WHEN** el usuario autenticado consulta el id de un presupuesto suyo
-- **THEN** el sistema responde los datos del presupuesto con su total gastado
-
-#### Scenario: Consulta de un presupuesto ajeno
-- **WHEN** el usuario autenticado consulta el id de un presupuesto que pertenece a otro usuario
-- **THEN** el sistema responde 404 sin exponer información del presupuesto
-
 ### Requirement: Actualización de presupuestos
 El sistema DEBE permitir modificar un presupuesto propio mediante `PUT /api/budgets/:id` con las mismas validaciones que la creación, incluido `threshold` opcional entero entre 1 y 100; si se omite, DEBE conservarse el umbral existente, y si es inválido el sistema DEBE responder 400. Si el presupuesto no existe o pertenece a otro usuario, el sistema DEBE responder 404. Si la actualización genera una duplicación de categoría y mes con otro presupuesto, el sistema DEBE responder 409. La actualización NUNCA DEBE cambiar el dueño del presupuesto.
 
@@ -92,24 +78,6 @@ El sistema DEBE permitir modificar un presupuesto propio mediante `PUT /api/budg
 #### Scenario: Edición de un presupuesto ajeno
 - **WHEN** el usuario autenticado intenta modificar un presupuesto de otro usuario
 - **THEN** el sistema responde 404 y el presupuesto no se modifica
-
-### Requirement: Eliminación de presupuestos
-El sistema DEBE permitir eliminar un presupuesto propio mediante `DELETE /api/budgets/:id`. Si el presupuesto no existe o pertenece a otro usuario, el sistema DEBE responder 404. Una vez eliminado, el presupuesto NO DEBE aparecer en listados posteriores.
-
-#### Scenario: Eliminación exitosa
-- **WHEN** el usuario autenticado elimina un presupuesto suyo
-- **THEN** el sistema lo elimina y deja de mostrarlo en los listados
-
-#### Scenario: Eliminación de un presupuesto ajeno
-- **WHEN** el usuario autenticado intenta eliminar un presupuesto de otro usuario
-- **THEN** el sistema responde 404 y el presupuesto no se elimina
-
-### Requirement: Protección de presupuestos sin sesión
-El sistema DEBE exigir un token JWT válido para cualquier operación sobre presupuestos. Sin token o con token inválido o expirado, el sistema DEBE responder el error de autenticación correspondiente en español.
-
-#### Scenario: Acceso sin token
-- **WHEN** un usuario no autenticado envía una solicitud a cualquier endpoint de presupuestos
-- **THEN** el sistema responde el error de autenticación en español y no expone ningún dato
 
 ### Requirement: Gestión de presupuestos en la interfaz
 La interfaz protegida DEBE permitir al usuario autenticado gestionar sus presupuestos mensuales por categoría, accesible desde la barra lateral con el acceso `Presupuestos`. El listado DEBE mostrar los presupuestos del mes seleccionado mediante el selector de período global de la barra lateral. El formulario de alta DEBE ofrecer categoría, mes inicializado con el período global seleccionable y monto con el botón `Agregar presupuesto`, junto con un campo opcional de umbral numérico entre 1 y 100 cuyo valor inicial DEBE ser 80. El listado DEBE mostrar categoría, límite y total gastado con formato de moneda ARS (símbolo `$`, separador de miles y dos decimales), el progreso respecto del límite y las alertas `Presupuesto excedido` cuando el gasto supera el límite y de aviso de umbral alcanzado cuando el gasto alcanza el porcentaje configurado sin superarlo. La edición DEBE reutilizar el formulario con `Guardar cambios` y `Cancelar`, y cada presupuesto DEBE ofrecer `Editar` y `Eliminar`. Los textos visibles DEBEN estar en español.

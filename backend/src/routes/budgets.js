@@ -15,7 +15,7 @@ const MAX_CATEGORY_LENGTH = 32
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/
 
 function validatePayload(body) {
-  const { category, month, amount } = body ?? {}
+  const { category, month, amount, threshold } = body ?? {}
 
   if (typeof category !== 'string' || category.trim() === '') {
     return { error: 'La categoría es obligatoria' }
@@ -33,7 +33,17 @@ function validatePayload(body) {
     return { error: 'El monto debe ser un número entero positivo (en centavos)' }
   }
 
-  return { value: { category: category.trim(), month, amount } }
+  let normalizedThreshold = null
+
+  if (threshold !== undefined && threshold !== null && threshold !== '') {
+    if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100) {
+      return { error: 'El umbral debe ser un número entero entre 1 y 100' }
+    }
+
+    normalizedThreshold = threshold
+  }
+
+  return { value: { category: category.trim(), month, amount, threshold: normalizedThreshold } }
 }
 
 router.use(requireAuth)
@@ -46,7 +56,11 @@ router.post('/', (req, res) => {
   }
 
   try {
-    const budget = createBudget({ userId: req.userId, ...result.value })
+    const budget = createBudget({
+      userId: req.userId,
+      ...result.value,
+      threshold: result.value.threshold ?? 80
+    })
 
     res.status(201).json(toPublicBudget(budget))
   } catch (err) {

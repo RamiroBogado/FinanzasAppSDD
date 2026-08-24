@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import {
   ArrowLeftRight,
+  Bell,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -18,6 +19,8 @@ import {
 } from 'lucide-react'
 import { Dialog, DialogPanel } from '@headlessui/react'
 import ChatWidget from './ChatWidget.jsx'
+import PeriodSelector from './PeriodSelector.jsx'
+import { api } from '../api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 
@@ -27,11 +30,68 @@ const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight },
   { to: '/presupuestos', label: 'Presupuestos', icon: PiggyBank },
-  { to: '/metas', label: 'Metas', icon: Target }
+  { to: '/metas', label: 'Metas', icon: Target },
+  { to: '/alertas', label: 'Alertas', icon: Bell }
 ]
 
+const UnreadAlertsCount = ({ compact }) => {
+  const [unread, setUnread] = useState(0)
+
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      try {
+        const token = api.getToken()
+
+        if (!token) {
+          return
+        }
+
+        const alerts = await api.listAlerts(token)
+
+        if (active) {
+          setUnread(alerts.filter((alert) => !alert.read).length)
+        }
+      } catch {
+        /* el badge se actualiza en el próximo evento */
+      }
+    }
+
+    load()
+    window.addEventListener('alerts-updated', load)
+
+    return () => {
+      active = false
+      window.removeEventListener('alerts-updated', load)
+    }
+  }, [])
+
+  if (unread === 0) {
+    return null
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center justify-center rounded-full bg-rose-500 font-semibold text-white ${
+        compact ? 'absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]' : 'ml-auto min-w-5 px-1.5 text-xs'
+      }`}
+    >
+      {unread > 9 ? '9+' : unread}
+    </span>
+  )
+}
+
+UnreadAlertsCount.propTypes = {
+  compact: PropTypes.bool
+}
+
+UnreadAlertsCount.defaultProps = {
+  compact: false
+}
+
 const navLinkClass = ({ isActive }, collapsed) =>
-  `flex items-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
+  `relative flex items-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
     collapsed ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-2'
   } ${isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`
 
@@ -53,11 +113,27 @@ const SidebarContent = ({ collapsed, onNavigate }) => {
         <nav className="space-y-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} title={collapsed ? label : undefined} className={(props) => navLinkClass(props, collapsed)} onClick={onNavigate}>
-              <Icon size={18} aria-hidden="true" />
-              {!collapsed && label}
+              <span className="relative">
+                <Icon size={18} aria-hidden="true" />
+                {to === '/alertas' && collapsed && <UnreadAlertsCount compact />}
+              </span>
+              {!collapsed && (
+                <>
+                  {label}
+                  {to === '/alertas' && <UnreadAlertsCount />}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
+        {!collapsed && (
+          <div className="mt-4 border-t border-slate-800 pt-4">
+            <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Período
+            </p>
+            <PeriodSelector />
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         {!collapsed && (
@@ -130,14 +206,17 @@ const AppLayout = () => {
           </span>
           <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">FinanzasApp</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Abrir menú de navegación"
-          className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          <Menu size={22} aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-2">
+          <PeriodSelector />
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menú de navegación"
+            className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <Menu size={22} aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       <Dialog open={mobileOpen} onClose={() => setMobileOpen(false)} className="relative z-50 md:hidden">

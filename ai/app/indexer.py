@@ -1,8 +1,9 @@
+import json
 import threading
 
 from app import data
 from app.config import EMBEDDING_MODEL, OLLAMA_HOST, RETRIEVAL_LIMIT
-from app.vectorstore import InMemoryVectorStore
+from app.vectorstore import ChromaVectorStore, VectorStoreProvider, create_vector_store
 
 
 def _format_amount(cents: int) -> str:
@@ -123,12 +124,48 @@ class SqliteDataProvider:
 
 
 class UserIndex:
-    def __init__(self, embedder=None, data_provider=None) -> None:
+    def __init__(self, embedder=None, data_provider=None, store_factory=None) -> None:
         self._embedder = embedder
         self._data_provider = data_provider or SqliteDataProvider()
-        self._stores: dict[int, InMemoryVectorStore] = {}
+        self._store_factory = store_factory or create_vector_store
+        self._stores: dict[int, VectorStoreProvider] = {}
         self._fingerprints: dict[int, tuple] = {}
         self._lock = threading.Lock()
+
+    @staticmethod
+    def _namespace(user_id: int) -> str:
+        return f"user-{user_id}"
+
+    @staticmethod
+    def _persisted_fingerprint(store: VectorStoreProvider) -> tuple | None:
+        if not isinstance(store, ChromaVectorStore):
+            return None
+
+        raw = store.get_metadata("fingerprint")
+
+        if raw is None:
+            return None
+
+        try:
+            return tuple(json.loads(raw))
+        except (TypeError, ValueError):
+            return None
+
+    def _known_fingerprint(self, store: VectorStoreProvider, user_id: int) -> tuple | None:
+        persisted = self._persisted_fingerprint(store)
+
+        if persisted is not None:
+            return persisted
+
+        return self._fingerprints.get(user_id)
+
+    def _remember_fingerprint(
+        self, store: VectorStoreProvider, user_id: int, fingerprint: tuple
+    ) -> None:
+        self._fingerprints[user_id] = fingerprint
+
+        if isinstance(store, ChromaVectorStore):
+            store.set_metadata({"fingerprint": json.dumps(list(fingerprint))})
 
     def _embed(self, text: str) -> list[float]:
         if self._embedder is None:
@@ -136,29 +173,36 @@ class UserIndex:
 
         return self._embedder(text)
 
-    def _rebuild(self, user_id: int) -> InMemoryVectorStore:
-        store = InMemoryVectorStore()
+    def _rebuild(self, store: VectorStoreProvider, user_id: int) -> None:
+        store.clear()
 
         for index, document in enumerate(self._data_provider.build_documents(user_id)):
             store.add(f"{user_id}-{index}", document, self._embed(document))
 
-        return store
-
     def retrieve(self, user_id: int, question: str, limit: int = RETRIEVAL_LIMIT) -> list[str]:
         with self._lock:
             fingerprint = self._data_provider.get_fingerprint(user_id)
+            store = self._stores.get(user_id)
 
-            if user_id not in self._stores or self._fingerprints.get(user_id) != fingerprint:
-                self._stores[user_id] = self._rebuild(user_id)
-                self._fingerprints[user_id] = fingerprint
+            if store is None:
+                store = self._store_factory(self._namespace(user_id))
+                self._stores[user_id] = store
 
-            store = self._stores[user_id]
+            if self._known_fingerprint(store, user_id) != fingerprint:
+                self._rebuild(store, user_id)
+                self._remember_fingerprint(store, user_id, fingerprint)
 
         return store.query(self._embed(question), limit)
 
     def clear(self, user_id: int) -> None:
         with self._lock:
-            self._stores.pop(user_id, None)
+            store = self._stores.get(user_id)
+
+            if store is None:
+                store = self._store_factory(self._namespace(user_id))
+                self._stores[user_id] = store
+
+            store.clear()
             self._fingerprints.pop(user_id, None)
 
 

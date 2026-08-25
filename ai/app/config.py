@@ -17,3 +17,9 @@ CHROMA_PATH = os.getenv("CHROMA_PATH", os.path.join(_PROJECT_ROOT, "chroma_data"
 
 RETRIEVAL_LIMIT = 8
 CHAT_HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "10"))
+
+KNOWLEDGE_DIR = os.getenv(
+    "KNOWLEDGE_DIR",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "knowledge"),
+)
+KNOWLEDGE_LIMIT = int(os.getenv("KNOWLEDGE_LIMIT", "4"))

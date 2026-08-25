@@ -207,3 +207,14 @@ class UserIndex:
 
 
 user_index = UserIndex()
+
+
+def retrieve_combined(user_id: int, question: str) -> list[str]:
+    from app.config import KNOWLEDGE_LIMIT, RETRIEVAL_LIMIT
+    from app.knowledge import knowledge_index
+
+    user_limit = min(RETRIEVAL_LIMIT, RETRIEVAL_LIMIT - KNOWLEDGE_LIMIT)
+    user_docs = user_index.retrieve(user_id, question, limit=user_limit)
+    knowledge_docs = knowledge_index.retrieve(question, limit=KNOWLEDGE_LIMIT)
+
+    return user_docs + knowledge_docs

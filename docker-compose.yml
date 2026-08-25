@@ -7,6 +7,7 @@ services:
       NODE_ENV: production
       DB_PATH: /app/data/finanzas.db
       JWT_SECRET: finanzasapp-dev-secret
+      AI_SERVICE_URL: http://ai:3002
     volumes:
       - finanzas_data:/app/data
 

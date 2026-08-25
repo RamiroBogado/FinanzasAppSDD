@@ -25,25 +25,6 @@ async function request(path, { method = 'GET', body, token } = {}) {
   return data
 }
 
-async function aiRequest(path, { method = 'POST', body, token } = {}) {
-  const headers = { 'Content-Type': 'application/json' }
-  if (token) headers.Authorization = `Bearer ${token}`
-
-  const response = await fetch(`/ai${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined
-  })
-
-  const data = response.status === 204 ? null : await response.json().catch(() => null)
-
-  if (!response.ok) {
-    throw new Error(data?.error || 'Error inesperado del servidor')
-  }
-
-  return data
-}
-
 export const api = {
   register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
   login: (payload) => request('/auth/login', { method: 'POST', body: payload }),
@@ -108,6 +89,8 @@ export const api = {
     link.remove()
     URL.revokeObjectURL(url)
   },
-  askChatbot: (token, message) => aiRequest('/chatbot/message', { body: { message }, token }),
-  clearChatbot: (token) => aiRequest('/chatbot/clear', { token })
+  listChatMessages: (token) => request('/chat/messages', { token }),
+  sendChatMessage: (token, message) =>
+    request('/chat/messages', { method: 'POST', body: { message }, token }),
+  clearChatMessages: (token) => request('/chat/messages', { method: 'DELETE', token })
 }

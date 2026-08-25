@@ -16,3 +16,4 @@ VECTOR_STORE = os.getenv("VECTOR_STORE", "memory")
 CHROMA_PATH = os.getenv("CHROMA_PATH", os.path.join(_PROJECT_ROOT, "chroma_data"))
 
 RETRIEVAL_LIMIT = 8
+CHAT_HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "10"))

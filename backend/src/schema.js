@@ -80,6 +80,21 @@ const CREATE_GOALS_INDEX_SQL = `
 CREATE INDEX IF NOT EXISTS idx_goals_user_created ON goals (user_id, created_at DESC)
 `
 
+const CREATE_CHAT_MESSAGES_SQL = `
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+)
+`
+
+const CREATE_CHAT_MESSAGES_INDEX_SQL = `
+CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages (user_id, id)
+`
+
 const USERS_ALTERS = {
   password_hash: "TEXT NOT NULL DEFAULT ''",
   created_at: "TEXT NOT NULL DEFAULT ''"
@@ -138,8 +153,10 @@ export function initSchema(db) {
   ensureTable(db, 'budgets', CREATE_BUDGETS_SQL, BUDGETS_ALTERS)
   ensureTable(db, 'goals', CREATE_GOALS_SQL, GOALS_ALTERS)
   ensureTable(db, 'alerts', CREATE_ALERTS_SQL, {})
+  ensureTable(db, 'chat_messages', CREATE_CHAT_MESSAGES_SQL, {})
   db.exec(CREATE_TRANSACTIONS_INDEX_SQL)
   db.exec(CREATE_BUDGETS_INDEX_SQL)
   db.exec(CREATE_GOALS_INDEX_SQL)
   db.exec(CREATE_ALERTS_INDEX_SQL)
+  db.exec(CREATE_CHAT_MESSAGES_INDEX_SQL)
 }

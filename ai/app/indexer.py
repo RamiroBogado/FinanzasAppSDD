@@ -43,9 +43,53 @@ def _monthly_stats(transactions: list[dict]) -> dict[str, dict]:
     return stats
 
 
+def _build_overview(transactions: list[dict], budgets: list[dict], goals: list[dict]) -> str:
+    total_income = sum(t["amount"] for t in transactions if t["type"] == "income")
+    total_expense = sum(t["amount"] for t in transactions if t["type"] == "expense")
+    balance = total_income - total_expense
+
+    parts = [
+        f"Balance general: ingresos {_format_amount(total_income)}, "
+        f"gastos {_format_amount(total_expense)}, saldo {_format_amount(balance)}"
+    ]
+
+    monthly = _monthly_stats(transactions)
+    for month, summary in sorted(monthly.items(), reverse=True):
+        year, month_number = month.split("-")
+        parts.append(
+            f"Resumen de {month_number}/{year}: "
+            f"ingresos {_format_amount(summary['income'])}, "
+            f"gastos {_format_amount(summary['expense'])}, "
+            f"saldo {_format_amount(summary['income'] - summary['expense'])}"
+        )
+
+    for budget in budgets:
+        year, month = budget["month"].split("-")
+        parts.append(
+            f"Presupuesto de {budget['category']} para {month}/{year}: "
+            f"límite {_format_amount(budget['amount'])}, "
+            f"gastado {_format_amount(budget['spent'])}"
+        )
+
+    for goal in goals:
+        deadline = (
+            f", fecha límite {_format_date(goal['deadline'])}" if goal["deadline"] else ""
+        )
+        parts.append(
+            f"Meta de ahorro {goal['name']}: objetivo {_format_amount(goal['target_amount'])}, "
+            f"ahorrado {_format_amount(goal['saved_amount'])}{deadline}"
+        )
+
+    return "Resumen financiero del usuario: " + "; ".join(parts)
+
+
 def build_documents(user_id: int) -> list[str]:
     transactions = data.get_transactions(user_id)
+    budgets = data.get_budgets(user_id)
+    goals = data.get_goals(user_id)
     documents = []
+
+    documents.append(_build_overview(transactions, budgets, goals))
 
     for transaction in transactions:
         kind = "Ingreso" if transaction["type"] == "income" else "Gasto"
@@ -86,7 +130,7 @@ def build_documents(user_id: int) -> list[str]:
                 + (f" ({top_transaction['description']})" if top_transaction["description"] else "")
             )
 
-    for budget in data.get_budgets(user_id):
+    for budget in budgets:
         year, month = budget["month"].split("-")
         documents.append(
             f"Presupuesto de {budget['category']} para {month}/{year}: "
@@ -94,7 +138,7 @@ def build_documents(user_id: int) -> list[str]:
             f"gastado {_format_amount(budget['spent'])}"
         )
 
-    for goal in data.get_goals(user_id):
+    for goal in goals:
         deadline = (
             f", fecha límite {_format_date(goal['deadline'])}" if goal["deadline"] else ""
         )
@@ -192,7 +236,7 @@ class UserIndex:
                 self._rebuild(store, user_id)
                 self._remember_fingerprint(store, user_id, fingerprint)
 
-        return store.query(self._embed(question), limit)
+            return store.query(self._embed(question), limit)
 
     def clear(self, user_id: int) -> None:
         with self._lock:

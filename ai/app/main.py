@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from app.auth import require_user_id
 from app.chat import build_reply
+from app.config import CHAT_HISTORY_LIMIT
 from app.indexer import user_index
 
 app = FastAPI(title="FinanzasApp AI Service")
@@ -17,10 +18,30 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 class MessageRequest(BaseModel):
     message: str | None = None
+    history: list[dict] | None = None
 
 
 class MessageResponse(BaseModel):
     reply: str
+
+
+def _validated_history(history: list[dict] | None) -> list[dict]:
+    turns = history or []
+
+    for turn in turns:
+        if not isinstance(turn, dict):
+            raise HTTPException(status_code=400, detail="El historial contiene un turno inválido")
+
+        role = turn.get("role")
+        content = turn.get("content")
+
+        if role not in ("user", "assistant"):
+            raise HTTPException(status_code=400, detail="El historial contiene un rol inválido")
+
+        if not isinstance(content, str) or not content.strip():
+            raise HTTPException(status_code=400, detail="El historial contiene un turno vacío")
+
+    return turns[-CHAT_HISTORY_LIMIT:]
 
 
 @app.get("/health")
@@ -39,9 +60,10 @@ def chatbot_message(payload: MessageRequest, user_id: int = Depends(require_user
         raise HTTPException(status_code=400, detail="El mensaje no puede estar vacío")
 
     question = message.strip()
+    history = _validated_history(payload.history)
     documents = user_index.retrieve(user_id, question)
 
-    return {"reply": build_reply(question, documents)}
+    return {"reply": build_reply(question, documents, history)}
 
 
 @router.post("/chatbot/clear")

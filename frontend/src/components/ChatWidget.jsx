@@ -11,15 +11,44 @@ const ChatWidget = ({ open, onClose }) => {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const [historyLoaded, setHistoryLoaded] = useState(false)
   const scrollRef = useRef(null)
 
   useEffect(() => {
-    if (open) {
-      setMessages((current) =>
-        current.length === 0 ? [{ role: 'assistant', content: GREETING }] : current
-      )
+    if (!open || historyLoaded) return
+
+    let cancelled = false
+    setLoadingHistory(true)
+    setMessages([])
+
+    api
+      .listChatMessages(getToken())
+      .then((data) => {
+        if (cancelled) return
+
+        const history = (data || []).map((message) => ({
+          role: message.role,
+          content: message.content
+        }))
+
+        setMessages(history.length > 0 ? history : [{ role: 'assistant', content: GREETING }])
+        setHistoryLoaded(true)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setMessages([{ role: 'assistant', content: GREETING }])
+          toast.showError(err.message)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingHistory(false)
+      })
+
+    return () => {
+      cancelled = true
     }
-  }, [open])
+  }, [open, historyLoaded, toast])
 
   useEffect(() => {
     if (open && scrollRef.current) {
@@ -40,7 +69,7 @@ const ChatWidget = ({ open, onClose }) => {
     setMessages((current) => [...current, { role: 'user', content: message }])
 
     try {
-      const data = await api.askChatbot(getToken(), message)
+      const data = await api.sendChatMessage(getToken(), message)
 
       setMessages((current) => [
         ...current,
@@ -57,7 +86,7 @@ const ChatWidget = ({ open, onClose }) => {
     if (sending) return
 
     try {
-      await api.clearChatbot(getToken())
+      await api.clearChatMessages(getToken())
       setMessages([{ role: 'assistant', content: GREETING }])
     } catch (err) {
       toast.showError(err.message)
@@ -99,19 +128,25 @@ const ChatWidget = ({ open, onClose }) => {
       </div>
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-        {messages.map((message, index) => (
-          <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <p
-              className={`max-w-[85%] whitespace-pre-wrap rounded-xl px-3 py-2 text-sm ${
-                message.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
-              }`}
-            >
-              {message.content}
-            </p>
-          </div>
-        ))}
+        {loadingHistory && (
+          <p className="text-center text-xs italic text-slate-400 dark:text-slate-500">
+            Cargando conversación…
+          </p>
+        )}
+        {!loadingHistory &&
+          messages.map((message, index) => (
+            <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <p
+                className={`max-w-[85%] whitespace-pre-wrap rounded-xl px-3 py-2 text-sm ${
+                  message.role === 'user'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
+                }`}
+              >
+                {message.content}
+              </p>
+            </div>
+          ))}
         {sending && (
           <div className="flex justify-start">
             <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm italic text-slate-500 dark:bg-slate-800 dark:text-slate-400">

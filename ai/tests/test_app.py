@@ -86,7 +86,7 @@ def test_message_rejects_blank_message(stub_index, message):
 def test_message_returns_reply_from_context(stub_index, monkeypatch):
     monkeypatch.setattr(
         "app.main.build_reply",
-        lambda question, documents: f"respuesta:{question}:{documents[0]}",
+        lambda question, documents, history=None: f"respuesta:{question}:{documents[0]}",
     )
 
     response = client.post(
@@ -106,6 +106,99 @@ def test_clear_resets_user_context(stub_index):
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
     assert stub_index.cleared == [3]
+
+
+class RecordingReply:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def __call__(self, question, documents, history=None):
+        self.calls.append({"question": question, "documents": documents, "history": history})
+
+        return "respuesta con historial"
+
+
+def post_message(message, history=None, user_id=1):
+    payload = {"message": message}
+
+    if history is not None:
+        payload["history"] = history
+
+    return client.post(
+        "/ai/chatbot/message",
+        json=payload,
+        headers=auth_header(user_id=user_id),
+    )
+
+
+def test_message_without_history_passes_empty_history(monkeypatch, stub_index):
+    recorder = RecordingReply()
+    monkeypatch.setattr("app.main.build_reply", recorder)
+
+    response = post_message("¿Cuánto gasté?")
+
+    assert response.status_code == 200
+    assert recorder.calls[0]["history"] == []
+
+
+def test_message_forwards_history_to_build_reply(monkeypatch, stub_index):
+    recorder = RecordingReply()
+    monkeypatch.setattr("app.main.build_reply", recorder)
+
+    history = [
+        {"role": "user", "content": "¿Cuánto gasté en comida?"},
+        {"role": "assistant", "content": "Gastaste $450,00 en Comida"},
+    ]
+
+    response = post_message("¿y en total?", history=history)
+
+    assert response.status_code == 200
+    assert response.json() == {"reply": "respuesta con historial"}
+    assert recorder.calls[0]["history"] == history
+
+
+def test_history_is_trimmed_to_configured_limit(monkeypatch, stub_index):
+    from app.config import CHAT_HISTORY_LIMIT
+
+    recorder = RecordingReply()
+    monkeypatch.setattr("app.main.build_reply", recorder)
+
+    history = [
+        {"role": "user" if index % 2 == 0 else "assistant", "content": f"turno {index}"}
+        for index in range(CHAT_HISTORY_LIMIT + 6)
+    ]
+
+    response = post_message("pregunta final", history=history)
+
+    assert response.status_code == 200
+    sent = recorder.calls[0]["history"]
+
+    assert len(sent) == CHAT_HISTORY_LIMIT
+    assert sent[0] == history[len(history) - CHAT_HISTORY_LIMIT]
+    assert sent[-1] == history[-1]
+
+
+@pytest.mark.parametrize("history", [
+    [{"role": "system", "content": "intruso"}],
+    [{"role": "", "content": "sin rol"}],
+])
+def test_history_with_invalid_role_rejected(monkeypatch, stub_index, history):
+    response = post_message("hola", history=history)
+
+    assert response.status_code == 400
+    assert response.json() == {"error": "El historial contiene un rol inválido"}
+    assert stub_index.calls == []
+
+
+@pytest.mark.parametrize("content", [None, "", "   "])
+def test_history_with_blank_content_rejected(monkeypatch, stub_index, content):
+    history = [{"role": "user", "content": content}]
+
+    response = post_message("hola", history=history)
+
+    assert response.status_code == 400
+    assert response.json() == {"error": "El historial contiene un turno vacío"}
+    assert stub_index.calls == []
 
 
 def test_system_prompt_includes_current_date():

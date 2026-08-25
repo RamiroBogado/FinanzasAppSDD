@@ -35,7 +35,13 @@ class StubIndex:
 @pytest.fixture()
 def stub_index(monkeypatch):
     stub = StubIndex()
+    monkeypatch.setattr("app.indexer.user_index", stub)
     monkeypatch.setattr("app.main.user_index", stub)
+
+    def fake_retrieve_combined(user_id: int, question: str) -> list[str]:
+        return stub.retrieve(user_id, question)
+
+    monkeypatch.setattr("app.main.retrieve_combined", fake_retrieve_combined)
 
     return stub
 
@@ -213,6 +219,15 @@ def test_system_prompt_includes_current_date():
     assert "{month}" not in prompt
     assert "respondé con ellos" in prompt
     assert "reservá" in prompt
+
+
+def test_system_prompt_includes_knowledge_rule():
+    from app.chat import _system_prompt
+
+    prompt = _system_prompt()
+
+    assert "Consejo financiero" in prompt
+    assert "guía orientativa general" in prompt
 
 
 class FakeDataProvider:

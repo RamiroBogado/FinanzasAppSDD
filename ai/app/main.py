@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from app.auth import require_user_id
 from app.chat import build_reply
 from app.config import CHAT_HISTORY_LIMIT
-from app.indexer import user_index
+from app.indexer import retrieve_combined, user_index
 
 app = FastAPI(title="FinanzasApp AI Service")
 router = APIRouter(prefix="/ai")
@@ -61,7 +61,7 @@ def chatbot_message(payload: MessageRequest, user_id: int = Depends(require_user
 
     question = message.strip()
     history = _validated_history(payload.history)
-    documents = user_index.retrieve(user_id, question)
+    documents = retrieve_combined(user_id, question)
 
     return {"reply": build_reply(question, documents, history)}
 

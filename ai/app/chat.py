@@ -22,6 +22,7 @@ Reglas:
 - Si la pregunta refiere a algo mencionado antes en la conversación ("ese gasto", "esa categoría", "¿y en total?"), usá la conversación previa para interpretarla; los datos financieros salen siempre del contexto.
 - Si el contexto contiene datos relacionados con la pregunta, respondé con ellos; reservá "no tengo información suficiente" únicamente para cuando ni el contexto ni la conversación previa mencionan nada relacionado.
 - Los datos del contexto pertenecen exclusivamente al usuario que pregunta; no menciones otros usuarios.
+- Cuando el contexto contenga documentos que comienzan con "Consejo financiero", úsalos como guía orientativa general. Los montos, fechas y datos específicos del usuario salen SOLO de los documentos que NO comienzan con "Consejo financiero".
 - Cuando sea útil, resumí totales o comparaciones con los montos exactos del contexto."""
 
 

@@ -11,21 +11,32 @@
     "github_*": "deny"
   },
   "mcp": {
-    "github": {
+    "filesystem": {
       "type": "local",
       "command": [
-        "docker",
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "GITHUB_PERSONAL_ACCESS_TOKEN",
-        "-e",
-        "GITHUB_TOOLSETS=projects,issues",
-        "ghcr.io/github/github-mcp-server"
-      ],
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\Rama-PC\\Desktop\\FinanzasAppSDD"
+      ]
+    },
+    "github": {
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
       "enabled": true,
-      "timeout": 30000
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      }
+    },
+    "stitch": {
+      "type": "remote",
+      "url": "https://stitch.googleapis.com/mcp",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "X-Goog-Api-Key": "AQ.Ab8RN6JkNn179-ok7yw2sB1PbPpOubDhy9rkOy2TtpUivFx1BA"
+      }
     }
   }
 }

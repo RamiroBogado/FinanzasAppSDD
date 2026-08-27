@@ -271,7 +271,7 @@ const AppPage = () => {
   ]
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-5xl">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-[#171d19] dark:text-white">Transacciones</h1>
@@ -286,10 +286,8 @@ const AppPage = () => {
           </Button>
           <Menu as="div" className="relative">
             <MenuButton
-              as={Button}
-              variant="secondary"
-              size="sm"
               disabled={exporting}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0e9f6e] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#0a7a53] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] disabled:pointer-events-none disabled:opacity-50"
             >
               <Download size={14} aria-hidden="true" />
               {exporting ? 'Exportando…' : 'Exportar'}
@@ -297,7 +295,7 @@ const AppPage = () => {
             </MenuButton>
             <MenuItems
               anchor="bottom end"
-              className="z-50 mt-2 w-44 rounded-lg border border-[#E2E8F0] bg-white p-1 shadow-lg focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+              className="z-50 w-44 rounded-lg border border-[#E2E8F0] bg-white p-1 shadow-lg focus:outline-none dark:border-slate-700 dark:bg-slate-900"
             >
               {EXPORT_OPTIONS.map(({ format, label, icon: Icon }) => (
                 <MenuItem key={format}>

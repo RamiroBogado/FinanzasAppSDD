@@ -54,10 +54,10 @@ const hasActiveFilters = (filters) =>
 
 const SectionTitle = ({ icon: Icon, children }) => (
   <div className="mb-4 flex items-center gap-2">
-    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff5ef] text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]">
       <Icon size={15} aria-hidden="true" />
     </span>
-    <h2 className="text-base font-semibold text-slate-900 dark:text-white">{children}</h2>
+    <h2 className="text-base font-semibold text-[#171d19] dark:text-white">{children}</h2>
   </div>
 )
 
@@ -287,7 +287,7 @@ const AppPage = () => {
         ))}
       </section>
 
-      <section className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+      <section className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-4 flex items-center justify-between">
           <SectionTitle icon={Filter}>Filtros</SectionTitle>
           <div className="flex items-center gap-2">
@@ -304,14 +304,14 @@ const AppPage = () => {
               </MenuButton>
               <MenuItems
                 anchor="bottom end"
-                className="z-50 mt-2 w-44 rounded-lg border border-slate-200 bg-white p-1 shadow-lg focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+                className="z-50 mt-2 w-44 rounded-lg border border-[#E2E8F0] bg-white p-1 shadow-lg focus:outline-none dark:border-slate-700 dark:bg-slate-900"
               >
                 {EXPORT_OPTIONS.map(({ format, label, icon: Icon }) => (
                   <MenuItem key={format}>
                     <button
                       type="button"
                       onClick={() => handleExport(format)}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 data-[focus]:bg-indigo-50 data-[focus]:text-indigo-700 dark:text-slate-200 dark:data-[focus]:bg-slate-800 dark:data-[focus]:text-white"
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[#3d4a42] data-[focus]:bg-[#eff5ef] data-[focus]:text-[#0e9f6e] dark:text-slate-200 dark:data-[focus]:bg-slate-800 dark:data-[focus]:text-white"
                     >
                       <Icon size={15} aria-hidden="true" />
                       {label}
@@ -359,7 +359,7 @@ const AppPage = () => {
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+      <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <SectionTitle icon={editingId ? ReceiptText : Plus}>
           {editingId ? 'Editar transacción' : 'Nueva transacción'}
         </SectionTitle>
@@ -429,7 +429,7 @@ const AppPage = () => {
         </div>
       </form>
 
-      <section className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+      <section className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <SectionTitle icon={ListOrdered}>Tus transacciones</SectionTitle>
         {loading ? (
           <div className="space-y-3">
@@ -458,14 +458,14 @@ const AppPage = () => {
             )}
           </EmptyState>
         ) : (
-          <ul className="-mx-2 divide-y divide-slate-100 dark:divide-slate-800">
+          <ul className="-mx-2 divide-y divide-[#E2E8F0] dark:divide-slate-800">
             {transactions.map((transaction) => {
               const isIncome = transaction.type === 'income'
 
               return (
                 <li
                   key={transaction.id}
-                  className="group -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                  className="group -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-[#F8FAFC] dark:hover:bg-slate-800/60"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
@@ -478,16 +478,16 @@ const AppPage = () => {
                       {isIncome ? <ArrowUpRight size={16} aria-hidden="true" /> : <ArrowDownRight size={16} aria-hidden="true" />}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                      <p className="truncate text-sm font-medium text-[#171d19] dark:text-slate-100">
                         {transaction.description ||
                           (isIncome ? 'Ingreso' : 'Gasto')}
                         {transaction.category && (
-                          <span className="ml-2 inline-block max-w-[8rem] truncate rounded-full bg-indigo-50 px-2 py-0.5 align-middle text-xs font-medium text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                          <span className="ml-2 inline-block max-w-[8rem] truncate rounded-full bg-[#eff5ef] px-2 py-0.5 align-middle text-xs font-medium text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]">
                             {transaction.category}
                           </span>
                         )}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{formatDate(transaction.date)}</p>
+                      <p className="text-xs text-[#64748B] dark:text-slate-400">{formatDate(transaction.date)}</p>
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1 sm:gap-2">
@@ -502,14 +502,14 @@ const AppPage = () => {
                     <button
                       type="button"
                       onClick={() => handleEdit(transaction)}
-                      className="rounded-md px-2 py-1 text-sm font-medium text-slate-500 opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-slate-100 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
+                      className="rounded-md px-2 py-1 text-sm font-medium text-[#64748B] opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-slate-100 hover:text-[#0e9f6e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-[#0e9f6e]"
                     >
                       Editar
                     </button>
                     <button
                       type="button"
                       onClick={() => setDeletingTransaction(transaction)}
-                      className="rounded-md px-2 py-1 text-sm font-medium text-slate-500 opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                      className="rounded-md px-2 py-1 text-sm font-medium text-[#64748B] opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                     >
                       Eliminar
                     </button>
@@ -521,15 +521,15 @@ const AppPage = () => {
         )}
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <SectionTitle icon={PieChart}>Gastos por categoría</SectionTitle>
         {Object.keys(expensesByCategory).length === 0 ? (
           <EmptyState icon={PieChart} title="Sin gastos categorizados" />
         ) : (
-          <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+          <ul className="divide-y divide-[#E2E8F0] dark:divide-slate-800">
             {Object.entries(expensesByCategory).map(([category, amount]) => (
               <li key={category} className="flex items-center justify-between py-2.5">
-                <span className="text-sm text-slate-700 dark:text-slate-300">{category}</span>
+                <span className="text-sm text-[#3d4a42] dark:text-slate-300">{category}</span>
                 <span className="amount text-sm font-medium text-red-600">{formatAmount(amount)}</span>
               </li>
             ))}

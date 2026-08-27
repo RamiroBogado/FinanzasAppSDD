@@ -16,7 +16,7 @@ const MONTHS = [
 ]
 
 const selectClass =
-  'rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+  'rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-sm font-medium text-[#3d4a42] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
 
 const PeriodSelector = () => {
   const { month, year, setPeriod } = usePeriod()

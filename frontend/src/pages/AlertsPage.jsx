@@ -103,7 +103,7 @@ const AlertsPage = () => {
               key={alert.id}
               className={`rounded-xl border p-4 shadow-card ${
                 alert.read
-                  ? 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'
+                  ? 'border-[#E2E8F0] bg-white dark:border-slate-800 dark:bg-slate-900'
                   : alert.type === 'danger'
                     ? 'border-red-200 bg-red-50/60 dark:border-red-500/30 dark:bg-red-500/10'
                     : 'border-amber-200 bg-amber-50/60 dark:border-amber-500/30 dark:bg-amber-500/10'
@@ -127,12 +127,12 @@ const AlertsPage = () => {
                     className={`mt-2 text-sm font-medium ${
                       alert.read
                         ? 'text-slate-600 dark:text-slate-400'
-                        : 'text-slate-900 dark:text-white'
+                        : 'text-[#171d19] dark:text-white'
                     }`}
                   >
                     {alert.message}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-xs text-[#64748B] dark:text-slate-400">
                     {formatDate(alert.createdAt.slice(0, 10))}
                   </p>
                 </div>

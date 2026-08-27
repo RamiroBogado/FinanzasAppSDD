@@ -59,22 +59,22 @@ const PREVIEW_BARS = [
 ]
 
 const navLinkClass =
-  'rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:text-slate-300 dark:hover:text-white'
+  'rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-300 dark:hover:text-white'
 
 const ctaLinkClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950'
+  'inline-flex items-center justify-center gap-2 rounded-lg bg-[#0e9f6e] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0a7a53] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950'
 
 const ghostCtaClass =
-  'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
+  'inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-[#3d4a42] transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
 
 const ProductPreview = () => (
   <div className="relative mx-auto mt-16 max-w-3xl">
-    <div className="absolute -inset-x-8 -top-8 bottom-0 rounded-t-3xl bg-gradient-to-b from-indigo-100/70 to-transparent blur-2xl dark:from-indigo-500/10" aria-hidden="true" />
-    <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20 sm:p-6">
+    <div className="absolute -inset-x-8 -top-8 bottom-0 rounded-t-3xl bg-gradient-to-b from-[#eff5ef]/70 to-transparent blur-2xl dark:from-indigo-500/10" aria-hidden="true" />
+    <div className="relative rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-xl shadow-slate-900/5 dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20 sm:p-6">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-white">Resumen del mes</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Agosto 2026</p>
+          <p className="text-sm font-semibold text-[#171d19] dark:text-white">Resumen del mes</p>
+          <p className="text-xs text-[#64748B] dark:text-slate-400">Agosto 2026</p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-success-500/10 dark:text-success-500">
           <TrendingUp size={14} aria-hidden="true" />
@@ -85,12 +85,12 @@ const ProductPreview = () => (
         {PREVIEW_KPIS.map(({ label, value }) => (
           <div
             key={label}
-            className="rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"
+            className="rounded-lg border border-slate-100 bg-[#F8FAFC] p-3 dark:border-slate-800 dark:bg-slate-950"
           >
-            <p className="truncate text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="truncate text-[11px] font-medium uppercase tracking-wide text-[#64748B] dark:text-slate-400">
               {label}
             </p>
-            <p className="amount truncate text-sm font-bold text-slate-900 dark:text-white">{value}</p>
+            <p className="amount truncate text-sm font-bold text-[#171d19] dark:text-white">{value}</p>
           </div>
         ))}
       </div>
@@ -99,11 +99,11 @@ const ProductPreview = () => (
           <div key={month} className="flex flex-1 flex-col items-center gap-1.5">
             <div className="flex h-full w-full items-end justify-center gap-1">
               <div
-                className="w-1/3 max-w-[14px] rounded-t bg-indigo-500 dark:bg-indigo-400"
+                className="w-1/3 max-w-[14px] rounded-t bg-[#0e9f6e] dark:bg-indigo-400"
                 style={{ height: `${income}%` }}
               />
               <div
-                className="w-1/3 max-w-[14px] rounded-t bg-indigo-200 dark:bg-slate-700"
+                className="w-1/3 max-w-[14px] rounded-t bg-[#81f9c1] dark:bg-slate-700"
                 style={{ height: `${expense}%` }}
               />
             </div>
@@ -112,21 +112,21 @@ const ProductPreview = () => (
         ))}
       </div>
     </div>
-    <div className="absolute -right-3 -top-4 hidden rotate-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:block">
-      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Meta: Vacaciones</p>
-      <p className="amount text-sm font-bold text-slate-900 dark:text-white">78% alcanzado</p>
+    <div className="absolute -right-3 -top-4 hidden rotate-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:block">
+      <p className="text-[11px] font-medium text-[#64748B] dark:text-slate-400">Meta: Vacaciones</p>
+      <p className="amount text-sm font-bold text-[#171d19] dark:text-white">78% alcanzado</p>
     </div>
   </div>
 )
 
 const HomePage = () => (
-  <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
+  <div className="flex min-h-screen flex-col bg-[#F8FAFC] dark:bg-slate-950">
     <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
       <div className="flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0e9f6e] text-white shadow-sm">
           <Wallet size={20} aria-hidden="true" />
         </span>
-        <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">FinanzasApp</span>
+        <span className="text-lg font-bold tracking-tight text-[#171d19] dark:text-white">FinanzasApp</span>
       </div>
       <nav className="flex items-center gap-2">
         <Link to="/login" className={navLinkClass}>
@@ -150,13 +150,13 @@ const HomePage = () => (
           aria-hidden="true"
         />
         <div
-          className="pointer-events-none absolute -top-32 right-0 h-96 w-96 rounded-full bg-indigo-100 blur-3xl dark:bg-indigo-900/30"
+          className="pointer-events-none absolute -top-32 right-0 h-96 w-96 rounded-full bg-[#eff5ef] blur-3xl dark:bg-indigo-900/30"
           aria-hidden="true"
         />
         <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-20 text-center md:pt-24">
-          <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-slate-900 md:text-6xl dark:text-white">
+          <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight text-[#171d19] md:text-6xl dark:text-white">
             Tus finanzas personales,{' '}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-violet-400">
+            <span className="bg-gradient-to-r from-[#0e9f6e] to-[#0a7a53] bg-clip-text text-transparent dark:from-[#63dca6] dark:to-[#0e9f6e]">
               claras y bajo control
             </span>
           </h1>
@@ -178,22 +178,22 @@ const HomePage = () => (
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <p className="text-center text-xs font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+        <p className="text-center text-xs font-semibold uppercase tracking-widest text-[#0e9f6e] dark:text-[#0e9f6e]">
           Todo en una sola app
         </p>
-        <h2 className="mx-auto mt-3 max-w-xl text-center text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h2 className="mx-auto mt-3 max-w-xl text-center text-3xl font-bold tracking-tight text-[#171d19] dark:text-white">
           Herramientas simples para decisiones financieras mejores
         </h2>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, description }) => (
             <article
               key={title}
-              className="group rounded-xl border border-slate-200 bg-white p-6 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+              className="group rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
             >
-              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-600 group-hover:text-white dark:bg-indigo-500/10 dark:text-indigo-400 dark:group-hover:bg-indigo-600 dark:group-hover:text-white">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg bg-[#eff5ef] text-[#0e9f6e] transition-colors group-hover:bg-[#0e9f6e] group-hover:text-white dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e] dark:group-hover:bg-[#0e9f6e] dark:group-hover:text-white">
                 <Icon size={22} aria-hidden="true" />
               </span>
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
+              <h3 className="text-base font-semibold text-[#171d19] dark:text-white">{title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
                 {description}
               </p>
@@ -203,7 +203,7 @@ const HomePage = () => (
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-8 py-14 text-center shadow-md">
+        <div className="rounded-2xl bg-gradient-to-r from-[#0e9f6e] to-[#0a7a53] px-8 py-14 text-center shadow-md">
           <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl">
             Empezá a controlar tus gastos hoy
           </h2>
@@ -212,7 +212,7 @@ const HomePage = () => (
           </p>
           <Link
             to="/registro"
-            className="mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-[#0e9f6e] shadow-sm transition-colors hover:bg-[#eff5ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             Crear cuenta gratis
           </Link>
@@ -220,40 +220,40 @@ const HomePage = () => (
       </section>
     </main>
 
-    <footer className="border-t border-slate-200 dark:border-slate-800">
+    <footer className="border-t border-[#E2E8F0] dark:border-slate-800">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 md:grid-cols-[2fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0e9f6e] text-white">
               <Wallet size={16} aria-hidden="true" />
             </span>
-            <span className="font-bold tracking-tight text-slate-900 dark:text-white">FinanzasApp</span>
+            <span className="font-bold tracking-tight text-[#171d19] dark:text-white">FinanzasApp</span>
           </div>
-          <p className="mt-3 max-w-xs text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-3 max-w-xs text-sm text-[#64748B] dark:text-slate-400">
             Gestión financiera personal simple, clara y privada.
           </p>
         </div>
         <nav aria-label="Producto">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-[#64748B]">
             Producto
           </p>
           <ul className="mt-4 space-y-2.5 text-sm">
-            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Crear cuenta</Link></li>
-            <li><Link to="/login" className="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Iniciar sesión</Link></li>
+            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-[#171d19] dark:text-slate-400 dark:hover:text-white">Crear cuenta</Link></li>
+            <li><Link to="/login" className="text-slate-600 transition-colors hover:text-[#171d19] dark:text-slate-400 dark:hover:text-white">Iniciar sesión</Link></li>
           </ul>
         </nav>
         <nav aria-label="Funcionalidades">
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-[#64748B]">
             Funcionalidades
           </p>
           <ul className="mt-4 space-y-2.5 text-sm">
-            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Transacciones</Link></li>
-            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Presupuestos</Link></li>
-            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">Metas de ahorro</Link></li>
+            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-[#171d19] dark:text-slate-400 dark:hover:text-white">Transacciones</Link></li>
+            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-[#171d19] dark:text-slate-400 dark:hover:text-white">Presupuestos</Link></li>
+            <li><Link to="/registro" className="text-slate-600 transition-colors hover:text-[#171d19] dark:text-slate-400 dark:hover:text-white">Metas de ahorro</Link></li>
           </ul>
         </nav>
       </div>
-      <div className="border-t border-slate-200 py-5 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
+      <div className="border-t border-[#E2E8F0] py-5 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-[#64748B]">
         © {new Date().getFullYear()} FinanzasApp · Finanzas personales multiusuario
       </div>
     </footer>

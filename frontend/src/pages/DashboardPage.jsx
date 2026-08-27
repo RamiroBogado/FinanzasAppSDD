@@ -261,9 +261,9 @@ const DashboardPage = () => {
                         data={donutData}
                         dataKey="value"
                         nameKey="name"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={2}
+                        innerRadius={72}
+                        outerRadius={92}
+                        paddingAngle={3}
                         strokeWidth={0}
                       >
                         {donutData.map((entry) => (
@@ -273,11 +273,11 @@ const DashboardPage = () => {
                       <Tooltip formatter={(value) => formatAmount(value)} contentStyle={tooltipStyle} />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[#64748B] dark:text-slate-400">
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-[#64748B] dark:text-slate-400">
                       Total gastado
                     </p>
-                    <p className="amount text-lg font-bold text-[#171d19] dark:text-white">
+                    <p className="amount mt-0.5 max-w-[130px] truncate text-[15px] font-bold leading-tight text-[#171d19] dark:text-white" title={formatAmount(totalExpense)}>
                       {formatAmount(totalExpense)}
                     </p>
                   </div>

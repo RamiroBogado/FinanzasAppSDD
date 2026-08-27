@@ -1,0 +1,72 @@
+<!-- Sidebar canónico FinanzasApp - Finanza Modern / Tailwind + Inter -->
+<!-- Fuente de verdad para Stitch y frontend. Active item se marca con bg-[#0e9f6e] -->
+<nav class="hidden md:flex flex-col justify-between w-64 border-r border-[#E2E8F0] bg-[#f5fbf4] p-4 min-h-screen">
+  <div>
+    <!-- Logo FINANZASAPP control financiero -->
+    <div class="mb-8 flex items-center gap-3 h-12 px-2">
+      <div class="w-10 h-10 bg-[#0e9f6e] rounded-lg flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1; font-size: 22px;">monitoring</span>
+      </div>
+      <div class="flex flex-col justify-center leading-none">
+        <span class="text-[20px] font-bold tracking-tight text-[#0e9f6e]" style="font-family: 'Inter', sans-serif;">FINANZASAPP</span>
+        <span class="text-[12px] font-normal text-[#64748B]" style="font-family: 'Inter', sans-serif;">control financiero</span>
+      </div>
+    </div>
+
+    <!-- Navegación principal -->
+    <!-- Para marcar activo: reemplazar clase del <a> correspondiente por bg-[#0e9f6e] text-white -->
+    <div class="space-y-1" data-sidebar-nav>
+      <a href="/panel" data-testid="nav-panel" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-[#0e9f6e] text-white">
+        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+        <span>Panel</span>
+      </a>
+      <a href="/transacciones" data-testid="nav-transacciones" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19]">
+        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+        <span>Transacciones</span>
+      </a>
+      <a href="/presupuestos" data-testid="nav-presupuestos" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19]">
+        <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+        <span>Presupuestos</span>
+      </a>
+      <a href="/metas" data-testid="nav-metas" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19]">
+        <span class="material-symbols-outlined text-[20px]">flag</span>
+        <span>Metas</span>
+      </a>
+      <a href="/alertas" data-testid="nav-alertas" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19]">
+        <span class="material-symbols-outlined text-[20px]">notifications</span>
+        <span>Alertas</span>
+        <!-- badge ejemplo: <span class="ml-auto min-w-5 h-5 px-1.5 bg-[#E11D48] text-white text-xs rounded-full flex items-center justify-center">3</span> -->
+      </a>
+      <a href="/configuracion" data-testid="nav-configuracion" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19]">
+        <span class="material-symbols-outlined text-[20px]">settings</span>
+        <span>Configuración</span>
+      </a>
+    </div>
+
+    <!-- Selector de período (solo desktop) -->
+    <div class="mt-6 border-t border-[#E2E8F0] pt-4">
+      <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">Período</p>
+      <!-- Slot para PeriodSelector -->
+      <div data-testid="period-selector" class="px-3 py-2 rounded-lg bg-white border border-[#E2E8F0] text-sm text-[#171d19]">Este mes</div>
+    </div>
+  </div>
+
+  <!-- Footer: usuario + acciones -->
+  <div class="space-y-3">
+    <p data-testid="sidebar-username" class="px-3 text-sm text-[#3d4a42] truncate">usuario@ejemplo.com</p>
+    <button type="button" data-testid="toggle-theme" class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#3d4a42] hover:bg-[#eff5ef] border border-[#E2E8F0] bg-white">
+      <span class="material-symbols-outlined text-[18px]">dark_mode</span>
+      <span>Modo oscuro</span>
+    </button>
+    <button type="button" data-testid="logout" class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium bg-[#0e9f6e] text-white hover:bg-[#0a7a53]">
+      <span class="material-symbols-outlined text-[18px]">logout</span>
+      <span>Cerrar sesión</span>
+    </button>
+    <button type="button" data-testid="collapse-sidebar" class="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm text-[#64748B] hover:bg-[#eff5ef]">
+      <span class="material-symbols-outlined text-[18px]">left_panel_close</span>
+      <span>Colapsar menú</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Variante colapsada 4.5rem: sustituir w-64 por w-[4.5rem], ocultar labels, centrar iconos, mostrar badge compacto en Alertas -->

@@ -12,6 +12,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PiggyBank,
+  Settings,
   Sun,
   Target,
   Wallet,
@@ -27,11 +28,12 @@ import { useTheme } from '../context/ThemeContext.jsx'
 const COLLAPSE_KEY = 'finanzasapp-sidebar-collapsed'
 
 const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/dashboard', label: 'Panel', icon: LayoutDashboard },
   { to: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight },
   { to: '/presupuestos', label: 'Presupuestos', icon: PiggyBank },
   { to: '/metas', label: 'Metas', icon: Target },
-  { to: '/alertas', label: 'Alertas', icon: Bell }
+  { to: '/alertas', label: 'Alertas', icon: Bell },
+  { to: '/configuracion', label: 'Configuración', icon: Settings }
 ]
 
 const UnreadAlertsCount = ({ compact }) => {
@@ -73,7 +75,7 @@ const UnreadAlertsCount = ({ compact }) => {
 
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full bg-rose-500 font-semibold text-white ${
+      className={`inline-flex items-center justify-center rounded-full bg-[#E11D48] font-semibold text-white ${
         compact ? 'absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]' : 'ml-auto min-w-5 px-1.5 text-xs'
       }`}
     >
@@ -91,9 +93,9 @@ UnreadAlertsCount.defaultProps = {
 }
 
 const navLinkClass = ({ isActive }, collapsed) =>
-  `relative flex items-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
-    collapsed ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-2'
-  } ${isActive ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`
+  `relative flex items-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] ${
+    collapsed ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-2.5'
+  } ${isActive ? 'bg-[#0e9f6e] text-white shadow-sm' : 'text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'}`
 
 const SidebarContent = ({ collapsed, onNavigate }) => {
   const { user, logout } = useAuth()
@@ -102,12 +104,15 @@ const SidebarContent = ({ collapsed, onNavigate }) => {
   return (
     <>
       <div>
-        <div className={`mb-6 flex items-center gap-2 ${collapsed ? 'justify-center' : 'px-1'}`}>
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white">
-            <Wallet size={18} aria-hidden="true" />
+        <div className={`mb-6 flex items-center gap-3 ${collapsed ? 'justify-center' : 'px-1'}`}>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0e9f6e] text-white">
+            <Wallet size={20} aria-hidden="true" />
           </span>
           {!collapsed && (
-            <h1 className="text-lg font-bold text-white">FinanzasApp</h1>
+            <div className="flex flex-col leading-none">
+              <span className="text-[20px] font-bold tracking-tight text-[#0e9f6e]">FINANZASAPP</span>
+              <span className="text-[12px] font-normal text-[#64748B]">control financiero</span>
+            </div>
           )}
         </div>
         <nav className="space-y-1">
@@ -127,8 +132,8 @@ const SidebarContent = ({ collapsed, onNavigate }) => {
           ))}
         </nav>
         {!collapsed && (
-          <div className="mt-4 border-t border-slate-800 pt-4">
-            <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <div className="mt-6 border-t border-[#E2E8F0] pt-4 dark:border-slate-800">
+            <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-slate-400">
               Período
             </p>
             <PeriodSelector />
@@ -137,13 +142,13 @@ const SidebarContent = ({ collapsed, onNavigate }) => {
       </div>
       <div className="space-y-2">
         {!collapsed && (
-          <p className="px-1 text-sm text-slate-300">{user?.username}</p>
+          <p className="px-1 text-sm text-[#3d4a42] dark:text-slate-300">{user?.username}</p>
         )}
         <button
           type="button"
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
-          className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm font-medium text-[#3d4a42] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
         >
           {theme === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
           {!collapsed && (theme === 'dark' ? 'Modo claro' : 'Modo oscuro')}
@@ -151,7 +156,7 @@ const SidebarContent = ({ collapsed, onNavigate }) => {
         <button
           type="button"
           onClick={logout}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0e9f6e] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0a7a53] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e]"
         >
           <LogOut size={16} aria-hidden="true" />
           {!collapsed && 'Cerrar sesión'}
@@ -181,9 +186,9 @@ const AppLayout = () => {
     })
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen bg-[#F8FAFC] dark:bg-slate-950">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 hidden flex-col justify-between border-r border-slate-800 bg-slate-900 p-4 transition-all md:flex ${
+        className={`fixed inset-y-0 left-0 z-40 hidden flex-col justify-between border-r border-[#E2E8F0] bg-[#f5fbf4]/80 p-4 backdrop-blur transition-all md:flex dark:border-slate-800 dark:bg-slate-900 ${
           collapsed ? 'w-[4.5rem]' : 'w-64'
         }`}
       >
@@ -192,19 +197,22 @@ const AppLayout = () => {
           type="button"
           onClick={toggleCollapsed}
           title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
           {!collapsed && 'Colapsar menú'}
         </button>
       </aside>
 
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur md:hidden dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#E2E8F0] bg-white/80 px-4 py-3 backdrop-blur md:hidden dark:border-slate-800 dark:bg-slate-900/80">
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0e9f6e] text-white">
             <Wallet size={18} aria-hidden="true" />
           </span>
-          <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">FinanzasApp</span>
+          <div className="flex flex-col leading-none">
+            <span className="text-[16px] font-bold tracking-tight text-[#0e9f6e]">FINANZASAPP</span>
+            <span className="text-[10px] text-[#64748B]">control financiero</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <PeriodSelector />
@@ -212,7 +220,7 @@ const AppLayout = () => {
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menú de navegación"
-            className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:text-slate-300 dark:hover:bg-slate-800"
+            className="rounded-lg p-2 text-[#3d4a42] transition-colors hover:bg-[#eff5ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <Menu size={22} aria-hidden="true" />
           </button>
@@ -222,13 +230,13 @@ const AppLayout = () => {
       <Dialog open={mobileOpen} onClose={() => setMobileOpen(false)} className="relative z-50 md:hidden">
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-y-0 left-0 flex w-64 max-w-[80%]">
-          <DialogPanel className="flex h-full w-full flex-col justify-between bg-slate-900 p-4 shadow-xl">
+          <DialogPanel className="flex h-full w-full flex-col justify-between bg-[#f5fbf4] p-4 shadow-xl dark:bg-slate-900">
             <SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} />
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
               aria-label="Cerrar menú de navegación"
-              className="absolute right-3 top-3 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              className="absolute right-3 top-3 rounded-lg p-2 text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
             >
               <X size={18} aria-hidden="true" />
             </button>
@@ -249,7 +257,7 @@ const AppLayout = () => {
         onClick={() => setChatOpen(true)}
         title="Abrir asistente financiero"
         aria-label="Abrir asistente financiero"
-        className="fixed bottom-4 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-colors hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 md:bottom-6 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+        className="fixed bottom-4 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#0e9f6e] text-white shadow-lg transition-colors hover:bg-[#0a7a53] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] md:bottom-6"
       >
         <MessageCircle size={24} aria-hidden="true" />
       </button>

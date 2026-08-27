@@ -8,11 +8,7 @@ import {
   FileSpreadsheet,
   FileText,
   Filter,
-  ListOrdered,
-  PieChart,
   Plus,
-  ReceiptText,
-  SearchX,
   Wallet
 } from 'lucide-react'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
@@ -21,7 +17,6 @@ import { formatAmount, formatDate, formatMonth, toLocalDate } from '../format.js
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import Field from '../components/ui/Field.jsx'
-import PageHeader from '../components/ui/PageHeader.jsx'
 import Skeleton from '../components/ui/Skeleton.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import StatCard from '../components/ui/StatCard.jsx'
@@ -86,6 +81,7 @@ const AppPage = () => {
   const [deletingTransaction, setDeletingTransaction] = useState(null)
   const [exporting, setExporting] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
 
   const periodRangeValues = periodRange({ month, year })
   const scopedFilters = {
@@ -192,6 +188,7 @@ const AppPage = () => {
       }
       setForm(EMPTY_FORM)
       setValidationError(null)
+      setShowForm(false)
       recheckAlerts()
       refresh(scopedFilters)
     } catch (err) {
@@ -209,12 +206,15 @@ const AppPage = () => {
       category: transaction.category ?? ''
     })
     setValidationError(null)
+    setShowForm(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleCancelEdit = () => {
     setEditingId(null)
     setForm(EMPTY_FORM)
     setValidationError(null)
+    setShowForm(false)
   }
 
   const handleConfirmDelete = async () => {
@@ -271,15 +271,50 @@ const AppPage = () => {
   ]
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title={editingId ? 'Editar transacción' : 'Transacciones'}
-        subtitle={
-          editingId
-            ? 'Modificá los datos y guardá los cambios.'
-            : `Registrá tus ingresos y gastos. Estás viendo ${formatMonth(toMonthString({ month, year }))}.`
-        }
-      />
+    <div className="mx-auto max-w-6xl">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#171d19] dark:text-white">Transacciones</h1>
+          <p className="mt-1 text-sm text-[#64748B] dark:text-slate-400">
+            Registrá tus ingresos y gastos. Estás viendo {formatMonth(toMonthString({ month, year }))}.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowForm((v) => !v)} size="sm">
+            <Plus size={14} aria-hidden="true" />
+            {showForm ? 'Cerrar formulario' : 'Agregar transacción'}
+          </Button>
+          <Menu as="div" className="relative">
+            <MenuButton
+              as={Button}
+              variant="secondary"
+              size="sm"
+              disabled={exporting}
+            >
+              <Download size={14} aria-hidden="true" />
+              {exporting ? 'Exportando…' : 'Exportar'}
+              {!exporting && <ChevronDown size={14} aria-hidden="true" />}
+            </MenuButton>
+            <MenuItems
+              anchor="bottom end"
+              className="z-50 mt-2 w-44 rounded-lg border border-[#E2E8F0] bg-white p-1 shadow-lg focus:outline-none dark:border-slate-700 dark:bg-slate-900"
+            >
+              {EXPORT_OPTIONS.map(({ format, label, icon: Icon }) => (
+                <MenuItem key={format}>
+                  <button
+                    type="button"
+                    onClick={() => handleExport(format)}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[#3d4a42] data-[focus]:bg-[#eff5ef] data-[focus]:text-[#0e9f6e] dark:text-slate-200 dark:data-[focus]:bg-slate-800 dark:data-[focus]:text-white"
+                  >
+                    <Icon size={15} aria-hidden="true" />
+                    {label}
+                  </button>
+                </MenuItem>
+              ))}
+            </MenuItems>
+          </Menu>
+        </div>
+      </div>
 
       <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {summaryCards.map(({ label, value, icon: Icon, tone }) => (
@@ -289,43 +324,21 @@ const AppPage = () => {
 
       <section className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-4 flex items-center justify-between">
-          <SectionTitle icon={Filter}>Filtros</SectionTitle>
           <div className="flex items-center gap-2">
-            <Menu as="div" className="relative">
-              <MenuButton
-                as={Button}
-                variant="secondary"
-                size="sm"
-                disabled={exporting}
-              >
-                <Download size={14} aria-hidden="true" />
-                {exporting ? 'Exportando…' : 'Exportar'}
-                {!exporting && <ChevronDown size={14} aria-hidden="true" />}
-              </MenuButton>
-              <MenuItems
-                anchor="bottom end"
-                className="z-50 mt-2 w-44 rounded-lg border border-[#E2E8F0] bg-white p-1 shadow-lg focus:outline-none dark:border-slate-700 dark:bg-slate-900"
-              >
-                {EXPORT_OPTIONS.map(({ format, label, icon: Icon }) => (
-                  <MenuItem key={format}>
-                    <button
-                      type="button"
-                      onClick={() => handleExport(format)}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-[#3d4a42] data-[focus]:bg-[#eff5ef] data-[focus]:text-[#0e9f6e] dark:text-slate-200 dark:data-[focus]:bg-slate-800 dark:data-[focus]:text-white"
-                    >
-                      <Icon size={15} aria-hidden="true" />
-                      {label}
-                    </button>
-                  </MenuItem>
-                ))}
-              </MenuItems>
-            </Menu>
-            <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-              Limpiar filtros
-            </Button>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff5ef] text-[#0e9f6e]">
+              <Filter size={15} aria-hidden="true" />
+            </span>
+            <h2 className="text-base font-semibold text-[#171d19] dark:text-white">Filtros</h2>
           </div>
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="text-xs font-medium text-[#64748B] hover:text-[#0e9f6e] hover:underline"
+          >
+            Limpiar filtros
+          </button>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Filtrar por categoría">
             <Select name="category" value={filters.category} onChange={handleFilterChange} className="mt-1">
               <option value="">Todas</option>
@@ -359,183 +372,184 @@ const AppPage = () => {
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-        <SectionTitle icon={editingId ? ReceiptText : Plus}>
-          {editingId ? 'Editar transacción' : 'Nueva transacción'}
-        </SectionTitle>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Tipo">
-            <Select name="type" value={form.type} onChange={handleChange} className="mt-1">
-              <option value="expense">Gasto</option>
-              <option value="income">Ingreso</option>
-            </Select>
-          </Field>
-          <Field label="Monto">
-            <Input
-              name="amount"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={form.amount}
-              onChange={handleChange}
-              placeholder="0.00"
-              className="mt-1"
-            />
-          </Field>
-          <Field label="Fecha">
-            <Input name="date" type="date" value={form.date} onChange={handleChange} className="mt-1" />
-          </Field>
-          <Field label="Descripción">
-            <Input
-              name="description"
-              type="text"
-              maxLength={255}
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Descripción opcional"
-              className="mt-1"
-            />
-          </Field>
-          <Field label="Categoría">
-            <Input
-              name="category"
-              type="text"
-              maxLength={32}
-              list="category-suggestions"
-              value={form.category}
-              onChange={handleChange}
-              placeholder="Categoría opcional"
-              className="mt-1"
-            />
-            <datalist id="category-suggestions">
-              {SUGGESTED_CATEGORIES.map((category) => (
-                <option key={category} value={category} />
-              ))}
-            </datalist>
-          </Field>
-        </div>
-        {validationError && (
-          <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400" role="alert">
-            {validationError}
-          </p>
-        )}
-        <div className="mt-4 flex gap-2">
-          <Button type="submit">{editingId ? 'Guardar cambios' : 'Agregar transacción'}</Button>
-          {editingId && (
+      {showForm && (
+        <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+          <SectionTitle icon={editingId ? Filter : Plus}>
+            {editingId ? 'Editar transacción' : 'Nueva transacción'}
+          </SectionTitle>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Tipo">
+              <Select name="type" value={form.type} onChange={handleChange} className="mt-1">
+                <option value="expense">Gasto</option>
+                <option value="income">Ingreso</option>
+              </Select>
+            </Field>
+            <Field label="Monto">
+              <Input
+                name="amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={form.amount}
+                onChange={handleChange}
+                placeholder="0.00"
+                className="mt-1"
+              />
+            </Field>
+            <Field label="Fecha">
+              <Input name="date" type="date" value={form.date} onChange={handleChange} className="mt-1" />
+            </Field>
+            <Field label="Descripción">
+              <Input
+                name="description"
+                type="text"
+                maxLength={255}
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Descripción opcional"
+                className="mt-1"
+              />
+            </Field>
+            <Field label="Categoría">
+              <Input
+                name="category"
+                type="text"
+                maxLength={32}
+                list="category-suggestions"
+                value={form.category}
+                onChange={handleChange}
+                placeholder="Categoría opcional"
+                className="mt-1"
+              />
+              <datalist id="category-suggestions">
+                {SUGGESTED_CATEGORIES.map((category) => (
+                  <option key={category} value={category} />
+                ))}
+              </datalist>
+            </Field>
+          </div>
+          {validationError && (
+            <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400" role="alert">
+              {validationError}
+            </p>
+          )}
+          <div className="mt-4 flex gap-2">
+            <Button type="submit">{editingId ? 'Guardar cambios' : 'Agregar transacción'}</Button>
             <Button variant="secondary" onClick={handleCancelEdit}>
               Cancelar
             </Button>
-          )}
-        </div>
-      </form>
-
-      <section className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-        <SectionTitle icon={ListOrdered}>Tus transacciones</SectionTitle>
-        {loading ? (
-          <div className="space-y-3">
-            {[0, 1, 2].map((index) => (
-              <Skeleton key={index} className="h-14" />
-            ))}
           </div>
-        ) : transactions.length === 0 ? (
-          <EmptyState
-            icon={hasActiveFilters(appliedFilters) ? SearchX : ReceiptText}
-            title={
-              hasActiveFilters(appliedFilters)
-                ? 'Sin resultados con los filtros actuales'
-                : 'Sin transacciones en este período'
-            }
-            description={
-              hasActiveFilters(appliedFilters)
-                ? undefined
-                : 'Agregá la primera desde el formulario de arriba.'
-            }
-          >
-            {hasActiveFilters(appliedFilters) && (
-              <Button variant="secondary" size="sm" className="mt-3" onClick={handleClearFilters}>
-                Limpiar filtros
-              </Button>
-            )}
-          </EmptyState>
-        ) : (
-          <ul className="-mx-2 divide-y divide-[#E2E8F0] dark:divide-slate-800">
-            {transactions.map((transaction) => {
-              const isIncome = transaction.type === 'income'
+        </form>
+      )}
 
-              return (
-                <li
-                  key={transaction.id}
-                  className="group -mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-[#F8FAFC] dark:hover:bg-slate-800/60"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                        isIncome
-                          ? 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
-                          : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'
-                      }`}
-                    >
-                      {isIncome ? <ArrowUpRight size={16} aria-hidden="true" /> : <ArrowDownRight size={16} aria-hidden="true" />}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-[#171d19] dark:text-slate-100">
-                        {transaction.description ||
-                          (isIncome ? 'Ingreso' : 'Gasto')}
-                        {transaction.category && (
-                          <span className="ml-2 inline-block max-w-[8rem] truncate rounded-full bg-[#eff5ef] px-2 py-0.5 align-middle text-xs font-medium text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]">
-                            {transaction.category}
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-xs text-[#64748B] dark:text-slate-400">{formatDate(transaction.date)}</p>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <section className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff5ef] text-[#0e9f6e]">
+              <Filter size={15} aria-hidden="true" />
+            </span>
+            <h2 className="text-base font-semibold text-[#171d19] dark:text-white">Tus transacciones</h2>
+            <span className="ml-auto text-xs text-[#64748B]">{transactions.length} movimientos</span>
+          </div>
+          {loading ? (
+            <div className="space-y-3">
+              {[0, 1, 2].map((index) => (
+                <Skeleton key={index} className="h-14" />
+              ))}
+            </div>
+          ) : transactions.length === 0 ? (
+            <EmptyState
+              title={hasActiveFilters(appliedFilters) ? 'Sin resultados con los filtros actuales' : 'Sin transacciones en este período'}
+              description={hasActiveFilters(appliedFilters) ? undefined : 'Agregá la primera desde el botón Agregar transacción.'}
+            >
+              {hasActiveFilters(appliedFilters) && (
+                <Button variant="secondary" size="sm" className="mt-3" onClick={handleClearFilters}>
+                  Limpiar filtros
+                </Button>
+              )}
+            </EmptyState>
+          ) : (
+            <ul className="divide-y divide-[#E2E8F0] dark:divide-slate-800">
+              {transactions.map((transaction) => {
+                const isIncome = transaction.type === 'income'
+
+                return (
+                  <li
+                    key={transaction.id}
+                    className="group flex items-center justify-between gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-[#F8FAFC] dark:hover:bg-slate-800/60"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                          isIncome
+                            ? 'bg-[#e6f4ef] text-[#0e9f6e] dark:bg-green-500/10 dark:text-green-400'
+                            : 'bg-[#ffe4e6] text-[#E11D48] dark:bg-red-500/10 dark:text-red-400'
+                        }`}
+                      >
+                        {isIncome ? <ArrowUpRight size={16} aria-hidden="true" /> : <ArrowDownRight size={16} aria-hidden="true" />}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-[#171d19] dark:text-slate-100">
+                          {transaction.description || (isIncome ? 'Ingreso' : 'Gasto')}
+                          {transaction.category && (
+                            <span className="ml-2 inline-block max-w-[8rem] truncate rounded-full bg-[#eff5ef] px-2 py-0.5 align-middle text-xs font-medium text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]">
+                              {transaction.category}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-[#64748B] dark:text-slate-400">{formatDate(transaction.date)}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-                    <span
-                      className={`amount mr-1 text-sm font-semibold ${
-                        isIncome ? 'text-success-600 dark:text-success-500' : 'text-red-600'
-                      }`}
-                    >
-                      {isIncome ? '+' : '-'}
-                      {formatAmount(transaction.amount)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(transaction)}
-                      className="rounded-md px-2 py-1 text-sm font-medium text-[#64748B] opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-slate-100 hover:text-[#0e9f6e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-[#0e9f6e]"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeletingTransaction(transaction)}
-                      className="rounded-md px-2 py-1 text-sm font-medium text-[#64748B] opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span
+                        className={`amount mr-2 whitespace-nowrap text-sm font-semibold ${isIncome ? 'text-[#0e9f6e] dark:text-green-400' : 'text-[#E11D48]'}`}
+                      >
+                        {isIncome ? '+' : '-'}
+                        {formatAmount(transaction.amount)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(transaction)}
+                        className="hidden rounded-md px-2 py-1 text-xs font-medium text-[#64748B] hover:bg-[#eff5ef] hover:text-[#0e9f6e] group-hover:inline-flex dark:text-slate-400"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingTransaction(transaction)}
+                        className="hidden rounded-md px-2 py-1 text-xs font-medium text-[#64748B] hover:bg-[#ffe4e6] hover:text-[#E11D48] group-hover:inline-flex dark:text-slate-400"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
 
-      <section className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-        <SectionTitle icon={PieChart}>Gastos por categoría</SectionTitle>
-        {Object.keys(expensesByCategory).length === 0 ? (
-          <EmptyState icon={PieChart} title="Sin gastos categorizados" />
-        ) : (
-          <ul className="divide-y divide-[#E2E8F0] dark:divide-slate-800">
-            {Object.entries(expensesByCategory).map(([category, amount]) => (
-              <li key={category} className="flex items-center justify-between py-2.5">
-                <span className="text-sm text-[#3d4a42] dark:text-slate-300">{category}</span>
-                <span className="amount text-sm font-medium text-red-600">{formatAmount(amount)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <section className="h-fit rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff5ef] text-[#0e9f6e]">
+              <Wallet size={15} aria-hidden="true" />
+            </span>
+            <h2 className="text-base font-semibold text-[#171d19] dark:text-white">Gastos por categoría</h2>
+          </div>
+          {Object.keys(expensesByCategory).length === 0 ? (
+            <p className="py-6 text-center text-sm text-[#64748B]">Sin gastos categorizados</p>
+          ) : (
+            <ul className="divide-y divide-[#E2E8F0] dark:divide-slate-800">
+              {Object.entries(expensesByCategory).map(([category, amount]) => (
+                <li key={category} className="flex items-center justify-between py-2.5">
+                  <span className="text-sm text-[#3d4a42] dark:text-slate-300">{category}</span>
+                  <span className="amount whitespace-nowrap text-sm font-semibold text-[#E11D48]">{formatAmount(amount)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
       <ConfirmDialog
         open={Boolean(deletingTransaction)}

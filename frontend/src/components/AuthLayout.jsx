@@ -9,9 +9,9 @@ const BENEFITS = [
 
 const AuthLayout = ({ title, subtitle, children }) => (
   <div className="grid min-h-screen lg:grid-cols-2">
-    <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-10 text-white lg:flex">
+    <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-[#002113] p-10 text-white lg:flex">
       <div
-        className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-indigo-600/20 blur-3xl"
+        className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#0e9f6e]/20 blur-3xl"
         aria-hidden="true"
       />
       <div
@@ -19,7 +19,7 @@ const AuthLayout = ({ title, subtitle, children }) => (
         aria-hidden="true"
       />
       <div className="relative flex items-center gap-2.5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 shadow-lg shadow-indigo-950/50">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0e9f6e] shadow-lg shadow-indigo-950/50">
           <Wallet size={20} aria-hidden="true" />
         </span>
         <span className="text-lg font-bold tracking-tight">FinanzasApp</span>
@@ -42,20 +42,20 @@ const AuthLayout = ({ title, subtitle, children }) => (
           ))}
         </ul>
       </div>
-      <p className="relative text-xs text-slate-500">FinanzasApp · Gestión financiera personal</p>
+      <p className="relative text-xs text-[#64748B]">FinanzasApp · Gestión financiera personal</p>
     </div>
 
     <div className="flex flex-col">
       <div className="flex items-center gap-2.5 p-6 lg:hidden">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0e9f6e] text-white">
           <Wallet size={18} aria-hidden="true" />
         </span>
-        <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">FinanzasApp</span>
+        <span className="text-lg font-bold tracking-tight text-[#171d19] dark:text-white">FinanzasApp</span>
       </div>
       <div className="flex flex-1 items-center justify-center px-6 pb-12 lg:pb-6">
         <div className="w-full max-w-md">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{title}</h1>
-          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[#171d19] dark:text-white">{title}</h1>
+          <p className="mt-1.5 text-sm text-[#64748B] dark:text-slate-400">{subtitle}</p>
           <div className="mt-8">{children}</div>
         </div>
       </div>

@@ -60,7 +60,7 @@ export const ToastProvider = ({ children }) => {
             <button
               type="button"
               onClick={() => dismissToast(toast.id)}
-              className="rounded-md p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              className="rounded-md p-0.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:hover:bg-slate-800 dark:hover:text-slate-200"
               aria-label="Cerrar notificación"
             >
               <X size={16} aria-hidden="true" />

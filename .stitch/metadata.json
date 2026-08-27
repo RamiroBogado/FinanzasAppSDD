@@ -1,0 +1,59 @@
+{
+  "projectId": "10190161456566293787",
+  "projectTitle": "FinanzasApp - Prototipo",
+  "designSystemId": "9e0d84fd26bc4da786355eb1ae0a94b8",
+  "designSystemName": "Finanza Modern",
+  "designSystemFile": "DESIGN.md",
+  "deviceType": "DESKTOP",
+  "logoScreenId": "f87a50d33d6b4a2f914118ef2ce930b1",
+  "screens": {
+    "dashboard": {
+      "screenId": "0374fa8a7385404097662c3ac9822c87",
+      "title": "Panel USAR",
+      "screenshot": "designs/dashboard.png",
+      "previousId": "95c8fe0d5a114c3baa2a1bea4a17a3cd"
+    },
+    "transacciones": {
+      "screenId": "f8d60496f6a24640bda259226c7dcae9",
+      "title": "Transacciones USAR",
+      "screenshot": "designs/transacciones.png",
+      "previousId": "96b007cb364044d19089ee0da3298018"
+    },
+    "presupuestos": {
+      "screenId": "3b583c03b8cb45698e41623dc80f7707",
+      "title": "Presupuestos USAR",
+      "screenshot": "designs/presupuestos.png",
+      "previousId": "afac32b916324e7e91ac35411b3502f9"
+    },
+    "metas": {
+      "screenId": "cdecc2e805fd4cbb8a7d417ab776d1c6",
+      "title": "Metas USAR",
+      "screenshot": "designs/metas.png",
+      "previousId": "e12760c479c645a5b813e04ba23ab151"
+    },
+    "alertas": {
+      "screenId": "21661e34e2ff4e7eb1bc1401c1f1eb24",
+      "title": "Alertas USAR",
+      "screenshot": "designs/alertas.png",
+      "previousId": "c58bfa54796f437fa19f3229c39f0bf4"
+    },
+    "configuracion": {
+      "screenId": "e65b4bc08e494c9eaca8925b4b154aab",
+      "title": "Configuración USAR",
+      "screenshot": "designs/configuracion.png",
+      "previousId": "6d7ddfa9d5ba458a87a2b2fa81a219b4"
+    },
+    "login": {
+      "screenId": "366419d8929b43ebab10899d734bd596",
+      "title": "Inicio de Sesion USAR",
+      "screenshot": "designs/login.png",
+      "previousId": "57cbc6e70f294989a49b0971ab1b94af"
+    },
+    "registro": {
+      "screenId": "ddb6272a5df14f31aaf3177a896e1818",
+      "title": "Registro USAR",
+      "screenshot": "designs/registro.png",
+      "previousId": "3888aedd59c5479a8f641399d118b88d"
+    }
+  }
+}

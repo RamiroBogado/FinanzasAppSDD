@@ -158,10 +158,12 @@ const DashboardPage = () => {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Dashboard</h1>
-      <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-        Resumen de {formatMonth(toMonthString({ month, year }))}
-      </p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-[#171d19] dark:text-white">Panel</h1>
+        <p className="text-sm text-[#64748B] dark:text-slate-400">
+          Bienvenido de nuevo · Resumen de {formatMonth(toMonthString({ month, year }))}
+        </p>
+      </div>
 
       {error && (
         <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400" role="alert">
@@ -188,10 +190,10 @@ const DashboardPage = () => {
                 }`}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-900 dark:text-white">{alert.message}</p>
+                <p className="text-sm font-medium text-[#171d19] dark:text-white">{alert.message}</p>
                 <Link
                   to="/alertas"
-                  className="mt-1 inline-block text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                  className="mt-1 inline-block text-xs font-semibold text-[#0e9f6e] hover:underline dark:text-[#0e9f6e]"
                 >
                   Ver todas las alertas
                 </Link>
@@ -212,8 +214,8 @@ const DashboardPage = () => {
           </section>
 
           <section className="mb-4 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-              <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+              <h2 className="mb-4 text-base font-semibold text-[#171d19] dark:text-white">
                 Evolución mensual
               </h2>
               <div className="relative h-64">
@@ -231,22 +233,22 @@ const DashboardPage = () => {
                       axisLine={false}
                       tick={{ fontSize: 11 }}
                       stroke="#94a3b8"
-                      tickFormatter={(value) => `${Math.round(value / 100) / 10}k`}
+                      tickFormatter={(value) => `${Math.round(value / 100000)}k`}
                     />
                     <Tooltip
                       formatter={(value) => formatAmount(value)}
                       contentStyle={tooltipStyle}
                       cursor={{ fill: 'rgba(148, 163, 184, 0.15)' }}
                     />
-                    <Bar dataKey="ingresos" name="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={22} />
-                    <Bar dataKey="gastos" name="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                    <Bar dataKey="ingresos" name="Ingresos" fill="#0e9f6e" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                    <Bar dataKey="gastos" name="Gastos" fill="#E11D48" radius={[4, 4, 0, 0]} maxBarSize={22} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-              <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+              <h2 className="mb-4 text-base font-semibold text-[#171d19] dark:text-white">
                 Distribución de gastos
               </h2>
               {donutData.length === 0 ? (
@@ -259,9 +261,9 @@ const DashboardPage = () => {
                         data={donutData}
                         dataKey="value"
                         nameKey="name"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={2}
+                        innerRadius={72}
+                        outerRadius={92}
+                        paddingAngle={3}
                         strokeWidth={0}
                       >
                         {donutData.map((entry) => (
@@ -271,11 +273,11 @@ const DashboardPage = () => {
                       <Tooltip formatter={(value) => formatAmount(value)} contentStyle={tooltipStyle} />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-[#64748B] dark:text-slate-400">
                       Total gastado
                     </p>
-                    <p className="amount text-lg font-bold text-slate-900 dark:text-white">
+                    <p className="amount mt-0.5 max-w-[130px] truncate text-[15px] font-bold leading-tight text-[#171d19] dark:text-white" title={formatAmount(totalExpense)}>
                       {formatAmount(totalExpense)}
                     </p>
                   </div>
@@ -284,15 +286,15 @@ const DashboardPage = () => {
             </div>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">Gastos por categoría</h2>
+          <section className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="mb-4 text-base font-semibold text-[#171d19] dark:text-white">Gastos por categoría</h2>
             {Object.keys(expensesByCategory).length === 0 ? (
               <EmptyState icon={PieChartIcon} title="Sin gastos categorizados" />
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+              <ul className="divide-y divide-[#E2E8F0] dark:divide-slate-800">
                 {Object.entries(expensesByCategory).map(([category, amount]) => (
                   <li key={category} className="flex items-center justify-between py-2.5">
-                    <span className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                    <span className="flex items-center gap-2 text-sm text-[#3d4a42] dark:text-slate-300">
                       <span
                         className="h-2.5 w-2.5 rounded-full"
                         style={{ backgroundColor: categoryColor(category) }}
@@ -307,28 +309,28 @@ const DashboardPage = () => {
             )}
           </section>
 
-          <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">Últimos movimientos</h2>
+          <section className="mt-4 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="mb-4 text-base font-semibold text-[#171d19] dark:text-white">Últimos movimientos</h2>
             {recentTransactions.length === 0 ? (
               <EmptyState icon={ReceiptText} title="Sin movimientos en el período" />
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+              <ul className="divide-y divide-[#E2E8F0] dark:divide-slate-800">
                 {recentTransactions.map((transaction) => (
                   <li
                     key={transaction.id}
-                    className="flex items-center justify-between rounded-lg px-2 py-2.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    className="flex items-center justify-between rounded-lg px-2 py-2.5 transition-colors hover:bg-[#F8FAFC] dark:hover:bg-slate-800/50"
                   >
                     <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                      <p className="text-sm font-medium text-[#171d19] dark:text-slate-100">
                         {transaction.description ||
                           (transaction.type === 'income' ? 'Ingreso' : 'Gasto')}
                         {transaction.category && (
-                          <span className="ml-2 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                          <span className="ml-2 rounded-full bg-[#eff5ef] px-2 py-0.5 text-xs font-medium text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]">
                             {transaction.category}
                           </span>
                         )}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-[#64748B] dark:text-slate-400">
                         {formatDate(transaction.date)}
                       </p>
                     </div>

@@ -161,12 +161,12 @@ const BudgetPage = () => {
         }
       />
 
-      <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+      <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-4 flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff5ef] text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]">
             {editingId ? <ReceiptText size={15} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}
           </span>
-          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+          <h2 className="text-base font-semibold text-[#171d19] dark:text-white">
             {editingId ? 'Editar presupuesto' : 'Nuevo presupuesto'}
           </h2>
         </div>
@@ -213,13 +213,13 @@ const BudgetPage = () => {
               placeholder="80"
               className="mt-1"
             />
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-xs text-[#64748B] dark:text-slate-400">
               Opcional. Se avisa cuando el gasto alcanza este porcentaje del límite.
             </p>
           </Field>
           <Field label="Mes">
             <Input type="month" value={selectedMonth} disabled className="mt-1 opacity-70" />
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-xs text-[#64748B] dark:text-slate-400">
               Definido por el selector de período del menú.
             </p>
           </Field>
@@ -239,8 +239,8 @@ const BudgetPage = () => {
         </div>
       </form>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">{formatMonth(selectedMonth)}</h2>
+      <section className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="mb-4 text-base font-semibold text-[#171d19] dark:text-white">{formatMonth(selectedMonth)}</h2>
         {loading ? (
           <div className="space-y-3">
             {[0, 1].map((index) => (
@@ -254,7 +254,7 @@ const BudgetPage = () => {
             description="Agregá uno desde el formulario de arriba."
           />
         ) : (
-          <ul className="-mx-2 divide-y divide-slate-100 dark:divide-slate-800">
+          <ul className="-mx-2 divide-y divide-[#E2E8F0] dark:divide-slate-800">
             {budgets.map((budget) => {
               const threshold = budget.threshold ?? 80
               const ratio = budget.spent / budget.amount
@@ -263,20 +263,20 @@ const BudgetPage = () => {
               const warningReached = !exceeded && ratio >= threshold / 100
 
               return (
-                <li key={budget.id} className="group px-2 py-4 transition-colors hover:bg-slate-50 rounded-lg dark:hover:bg-slate-800/60">
+                <li key={budget.id} className="group px-2 py-4 transition-colors hover:bg-[#F8FAFC] rounded-lg dark:hover:bg-slate-800/60">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <span
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                           exceeded
                             ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'
-                            : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400'
+                            : 'bg-[#eff5ef] text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]'
                         }`}
                       >
                         <Wallet size={16} aria-hidden="true" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                        <p className="truncate text-sm font-medium text-[#171d19] dark:text-slate-100">
                           <span
                             className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
                             style={{ backgroundColor: categoryColor(budget.category) }}
@@ -294,7 +294,7 @@ const BudgetPage = () => {
                             </span>
                           )}
                         </p>
-                        <p className="amount text-xs text-slate-500 dark:text-slate-400">
+                        <p className="amount text-xs text-[#64748B] dark:text-slate-400">
                           {formatAmount(budget.spent)} de {formatAmount(budget.amount)}
                         </p>
                       </div>
@@ -314,14 +314,14 @@ const BudgetPage = () => {
                       <button
                         type="button"
                         onClick={() => handleEdit(budget)}
-                        className="rounded-md px-2 py-1 text-sm font-medium text-slate-500 opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-slate-100 hover:text-indigo-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-indigo-400"
+                        className="rounded-md px-2 py-1 text-sm font-medium text-[#64748B] opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-slate-100 hover:text-[#0e9f6e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-[#0e9f6e]"
                       >
                         Editar
                       </button>
                       <button
                         type="button"
                         onClick={() => setDeletingBudget(budget)}
-                        className="rounded-md px-2 py-1 text-sm font-medium text-slate-500 opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                        className="rounded-md px-2 py-1 text-sm font-medium text-[#64748B] opacity-100 transition-all sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 group-hover:opacity-100 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                       >
                         Eliminar
                       </button>
@@ -330,7 +330,7 @@ const BudgetPage = () => {
                   <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
                       className={`h-2 rounded-full transition-[width] duration-500 ${
-                        exceeded ? 'bg-red-600' : warningReached ? 'bg-amber-500' : 'bg-indigo-600'
+                        exceeded ? 'bg-red-600' : warningReached ? 'bg-amber-500' : 'bg-[#0e9f6e]'
                       }`}
                       style={{ width: `${percentage}%` }}
                     />

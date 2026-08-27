@@ -41,12 +41,12 @@ const AmountDialog = ({
     <Dialog open={open} onClose={onCancel} className="relative z-50">
       <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <DialogPanel className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-          <DialogTitle className="text-base font-semibold text-slate-900 dark:text-white">
+        <DialogPanel className="w-full max-w-sm rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+          <DialogTitle className="text-base font-semibold text-[#171d19] dark:text-white">
             {title}
           </DialogTitle>
           {description && (
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+            <p className="mt-1 text-sm text-[#64748B] dark:text-slate-400">{description}</p>
           )}
           <input
             autoFocus
@@ -60,7 +60,7 @@ const AmountDialog = ({
             }}
             placeholder="0,00"
             aria-label={title}
-            className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="mt-4 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-[#171d19] placeholder:text-slate-400 transition-colors focus:border-[#0e9f6e] focus:outline-none focus:ring-2 focus:ring-[#0e9f6e]/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-[#64748B]"
           />
           {value !== '' && !isValid && (
             <p className="mt-2 text-xs text-red-600 dark:text-red-400">

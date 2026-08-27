@@ -34,7 +34,7 @@ const RegisterPage = () => {
     <AuthLayout title="Crear cuenta" subtitle="Empezá a controlar tus finanzas hoy">
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <label htmlFor="username" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="username" className="block text-sm font-medium text-[#3d4a42] dark:text-slate-300">
             Nombre de usuario
             <Input
               id="username"
@@ -44,7 +44,7 @@ const RegisterPage = () => {
               required
             />
           </label>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="email" className="block text-sm font-medium text-[#3d4a42] dark:text-slate-300">
             Correo electrónico
             <Input
               id="email"
@@ -55,7 +55,7 @@ const RegisterPage = () => {
               required
             />
           </label>
-          <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <label htmlFor="password" className="block text-sm font-medium text-[#3d4a42] dark:text-slate-300">
             Contraseña
             <div className="relative mt-1">
               <Input
@@ -70,7 +70,7 @@ const RegisterPage = () => {
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 transition-colors hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:text-slate-200"
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 transition-colors hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:hover:text-slate-200"
               >
                 {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
               </button>
@@ -87,7 +87,7 @@ const RegisterPage = () => {
         </Button>
         <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="font-medium text-indigo-600 hover:underline dark:text-indigo-400">
+          <Link to="/login" className="font-medium text-[#0e9f6e] hover:underline dark:text-[#0e9f6e]">
             Inicia sesión
           </Link>
         </p>

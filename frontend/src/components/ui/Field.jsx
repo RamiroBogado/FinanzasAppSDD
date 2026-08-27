@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 const Field = ({ label, htmlFor, children, className = '' }) => (
   <label
     htmlFor={htmlFor}
-    className={`block text-sm font-medium text-slate-700 dark:text-slate-300 ${className}`}
+    className={`block text-sm font-medium text-[#3d4a42] dark:text-slate-300 ${className}`}
   >
     {label}
     {children}

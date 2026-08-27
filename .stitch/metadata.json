@@ -1,0 +1,50 @@
+{
+  "projectId": "10190161456566293787",
+  "projectTitle": "FinanzasApp - Prototipo",
+  "designSystemId": "9e0d84fd26bc4da786355eb1ae0a94b8",
+  "designSystemName": "Finanza Modern",
+  "designSystemFile": "DESIGN.md",
+  "deviceType": "DESKTOP",
+  "screens": {
+    "dashboard": {
+      "screenId": "ed01acedee774063a062d87a93032822",
+      "title": "Panel de Control",
+      "screenshot": "designs/dashboard.png"
+    },
+    "transacciones": {
+      "screenId": "de3a5e5d70e4464ca9fb41d6a245c140",
+      "title": "Gestión de Transacciones",
+      "screenshot": "designs/transacciones.png"
+    },
+    "presupuestos": {
+      "screenId": "dcd1ad3bb19d4b7f98cf8109f23567e2",
+      "title": "Presupuestos",
+      "screenshot": "designs/presupuestos.png"
+    },
+    "metas": {
+      "screenId": "ee3f8c5004fd4e44805ae92351f24ec8",
+      "title": "Gestión de Metas de Ahorro",
+      "screenshot": "designs/metas.png"
+    },
+    "alertas": {
+      "screenId": "105f6b4b1b6d447993699a3d1fb6c30b",
+      "title": "Alertas",
+      "screenshot": "designs/alertas.png"
+    },
+    "configuracion": {
+      "screenId": "ee82321c63f2419880be6c1ffeb6ae86",
+      "title": "Configuración",
+      "screenshot": "designs/configuracion.png"
+    },
+    "login": {
+      "screenId": "e55a0cb5c6fe4c10801aa34025f442b1",
+      "title": "Inicio de Sesión",
+      "screenshot": "designs/login.png"
+    },
+    "registro": {
+      "screenId": "b3eb1214849f4f5ca6701ae9e54186cd",
+      "title": "Registro",
+      "screenshot": "designs/registro.png"
+    }
+  }
+}

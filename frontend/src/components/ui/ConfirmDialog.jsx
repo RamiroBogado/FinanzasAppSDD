@@ -7,17 +7,17 @@ const ConfirmDialog = ({ open, title, description, onCancel, onConfirm }) => (
   <Dialog open={open} onClose={onCancel} className="relative z-50">
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden="true" />
     <div className="fixed inset-0 flex items-center justify-center p-4">
-      <DialogPanel className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+      <DialogPanel className="w-full max-w-md rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-start gap-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400">
             <AlertTriangle size={20} aria-hidden="true" />
           </div>
           <div>
-            <DialogTitle className="text-base font-semibold text-slate-900 dark:text-white">
+            <DialogTitle className="text-base font-semibold text-[#171d19] dark:text-white">
               {title}
             </DialogTitle>
             {description && (
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+              <p className="mt-1 text-sm text-[#64748B] dark:text-slate-400">{description}</p>
             )}
           </div>
         </div>

@@ -233,7 +233,7 @@ const DashboardPage = () => {
                       axisLine={false}
                       tick={{ fontSize: 11 }}
                       stroke="#94a3b8"
-                      tickFormatter={(value) => `${Math.round(value / 100) / 10}k`}
+                      tickFormatter={(value) => `${Math.round(value / 100000)}k`}
                     />
                     <Tooltip
                       formatter={(value) => formatAmount(value)}

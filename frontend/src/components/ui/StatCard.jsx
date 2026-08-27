@@ -27,7 +27,7 @@ const StatCard = ({ label, value, icon: Icon, tone = 'brand' }) => {
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-[#64748B] dark:text-slate-400">{label}</p>
-          <p className={`amount mt-1 truncate text-2xl font-bold ${toneClasses.value}`}>{value}</p>
+          <p className={`amount mt-1 text-xl font-bold leading-tight break-words ${toneClasses.value}`}>{value}</p>
         </div>
         {Icon && (
           <span

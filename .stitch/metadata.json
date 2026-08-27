@@ -5,46 +5,55 @@
   "designSystemName": "Finanza Modern",
   "designSystemFile": "DESIGN.md",
   "deviceType": "DESKTOP",
+  "logoScreenId": "f87a50d33d6b4a2f914118ef2ce930b1",
   "screens": {
     "dashboard": {
-      "screenId": "ed01acedee774063a062d87a93032822",
-      "title": "Panel de Control",
-      "screenshot": "designs/dashboard.png"
+      "screenId": "95c8fe0d5a114c3baa2a1bea4a17a3cd",
+      "title": "Panel de Control - FinanzasApp (Marca Corregida)",
+      "screenshot": "designs/dashboard.png",
+      "previousId": "ed01acedee774063a062d87a93032822"
     },
     "transacciones": {
-      "screenId": "de3a5e5d70e4464ca9fb41d6a245c140",
-      "title": "Gestión de Transacciones",
-      "screenshot": "designs/transacciones.png"
+      "screenId": "96b007cb364044d19089ee0da3298018",
+      "title": "Gestión de Transacciones - FinanzasApp",
+      "screenshot": "designs/transacciones.png",
+      "previousId": "de3a5e5d70e4464ca9fb41d6a245c140"
     },
     "presupuestos": {
-      "screenId": "dcd1ad3bb19d4b7f98cf8109f23567e2",
-      "title": "Presupuestos",
-      "screenshot": "designs/presupuestos.png"
+      "screenId": "afac32b916324e7e91ac35411b3502f9",
+      "title": "Presupuestos - FinanzasApp (Marca Corregida)",
+      "screenshot": "designs/presupuestos.png",
+      "previousId": "dcd1ad3bb19d4b7f98cf8109f23567e2"
     },
     "metas": {
-      "screenId": "ee3f8c5004fd4e44805ae92351f24ec8",
-      "title": "Gestión de Metas de Ahorro",
-      "screenshot": "designs/metas.png"
+      "screenId": "e12760c479c645a5b813e04ba23ab151",
+      "title": "Metas de Ahorro - FinanzasApp",
+      "screenshot": "designs/metas.png",
+      "previousId": "ee3f8c5004fd4e44805ae92351f24ec8"
     },
     "alertas": {
-      "screenId": "105f6b4b1b6d447993699a3d1fb6c30b",
-      "title": "Alertas",
-      "screenshot": "designs/alertas.png"
+      "screenId": "c58bfa54796f437fa19f3229c39f0bf4",
+      "title": "Alertas - FinanzasApp",
+      "screenshot": "designs/alertas.png",
+      "previousId": "105f6b4b1b6d447993699a3d1fb6c30b"
     },
     "configuracion": {
-      "screenId": "ee82321c63f2419880be6c1ffeb6ae86",
-      "title": "Configuración",
-      "screenshot": "designs/configuracion.png"
+      "screenId": "6d7ddfa9d5ba458a87a2b2fa81a219b4",
+      "title": "Configuración - FinanzasApp (Marca Corregida)",
+      "screenshot": "designs/configuracion.png",
+      "previousId": "ee82321c63f2419880be6c1ffeb6ae86"
     },
     "login": {
-      "screenId": "e55a0cb5c6fe4c10801aa34025f442b1",
-      "title": "Inicio de Sesión",
-      "screenshot": "designs/login.png"
+      "screenId": "57cbc6e70f294989a49b0971ab1b94af",
+      "title": "Inicio de Sesión - FinanzasApp",
+      "screenshot": "designs/login.png",
+      "previousId": "e55a0cb5c6fe4c10801aa34025f442b1"
     },
     "registro": {
-      "screenId": "b3eb1214849f4f5ca6701ae9e54186cd",
-      "title": "Registro",
-      "screenshot": "designs/registro.png"
+      "screenId": "3888aedd59c5479a8f641399d118b88d",
+      "title": "Registro - FinanzasApp",
+      "screenshot": "designs/registro.png",
+      "previousId": "b3eb1214849f4f5ca6701ae9e54186cd"
     }
   }
 }

@@ -15,8 +15,7 @@ import {
   Settings,
   Sun,
   Target,
-  Wallet,
-  X
+  Wallet
 } from 'lucide-react'
 import { Dialog, DialogPanel } from '@headlessui/react'
 import ChatWidget from './ChatWidget.jsx'
@@ -97,12 +96,12 @@ const navLinkClass = ({ isActive }, collapsed) =>
     collapsed ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-2.5'
   } ${isActive ? 'bg-[#0e9f6e] text-white shadow-sm' : 'text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'}`
 
-const SidebarContent = ({ collapsed, onNavigate }) => {
+const SidebarContent = ({ collapsed, onNavigate, onToggleCollapsed }) => {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <>
+    <div className="flex h-full flex-col">
       <div>
         <div className={`mb-6 flex items-center gap-3 ${collapsed ? 'justify-center' : 'px-1'}`}>
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0e9f6e] text-white">
@@ -140,7 +139,7 @@ const SidebarContent = ({ collapsed, onNavigate }) => {
           </div>
         )}
       </div>
-      <div className="space-y-2">
+      <div className="mt-auto space-y-2 pt-6">
         {!collapsed && (
           <p className="px-1 text-sm text-[#3d4a42] dark:text-slate-300">{user?.username}</p>
         )}
@@ -161,14 +160,24 @@ const SidebarContent = ({ collapsed, onNavigate }) => {
           <LogOut size={16} aria-hidden="true" />
           {!collapsed && 'Cerrar sesión'}
         </button>
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+          className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+        >
+          {collapsed ? <PanelLeftOpen size={14} aria-hidden="true" /> : <PanelLeftClose size={14} aria-hidden="true" />}
+          {!collapsed && 'Colapsar menú'}
+        </button>
       </div>
-    </>
+    </div>
   )
 }
 
 SidebarContent.propTypes = {
   collapsed: PropTypes.bool.isRequired,
-  onNavigate: PropTypes.func
+  onNavigate: PropTypes.func,
+  onToggleCollapsed: PropTypes.func.isRequired
 }
 
 const AppLayout = () => {
@@ -188,20 +197,11 @@ const AppLayout = () => {
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] dark:bg-slate-950">
       <aside
-        className={`fixed inset-y-0 left-0 z-40 hidden flex-col justify-between border-r border-[#E2E8F0] bg-[#f5fbf4]/80 p-4 backdrop-blur transition-all md:flex dark:border-slate-800 dark:bg-slate-900 ${
+        className={`fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-[#E2E8F0] bg-[#f5fbf4]/80 p-4 backdrop-blur transition-all md:flex dark:border-slate-800 dark:bg-slate-900 ${
           collapsed ? 'w-[4.5rem]' : 'w-64'
         }`}
       >
-        <SidebarContent collapsed={collapsed} />
-        <button
-          type="button"
-          onClick={toggleCollapsed}
-          title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-        >
-          {collapsed ? <PanelLeftOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
-          {!collapsed && 'Colapsar menú'}
-        </button>
+        <SidebarContent collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
       </aside>
 
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#E2E8F0] bg-white/80 px-4 py-3 backdrop-blur md:hidden dark:border-slate-800 dark:bg-slate-900/80">
@@ -230,16 +230,8 @@ const AppLayout = () => {
       <Dialog open={mobileOpen} onClose={() => setMobileOpen(false)} className="relative z-50 md:hidden">
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-y-0 left-0 flex w-64 max-w-[80%]">
-          <DialogPanel className="flex h-full w-full flex-col justify-between bg-[#f5fbf4] p-4 shadow-xl dark:bg-slate-900">
-            <SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} />
-            <button
-              type="button"
-              onClick={() => setMobileOpen(false)}
-              aria-label="Cerrar menú de navegación"
-              className="absolute right-3 top-3 rounded-lg p-2 text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-            >
-              <X size={18} aria-hidden="true" />
-            </button>
+          <DialogPanel className="flex h-full w-full flex-col bg-[#f5fbf4] p-4 shadow-xl dark:bg-slate-900">
+            <SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setMobileOpen(false)} />
           </DialogPanel>
         </div>
       </Dialog>

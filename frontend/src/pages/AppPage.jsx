@@ -11,7 +11,7 @@ import {
   Plus,
   Wallet
 } from 'lucide-react'
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { Dialog, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { api, getCategories, getToken } from '../api.js'
 import { formatAmount, formatDate, formatMonth, toLocalDate } from '../format.js'
 import Button from '../components/ui/Button.jsx'
@@ -71,7 +71,7 @@ const AppPage = () => {
   const [deletingTransaction, setDeletingTransaction] = useState(null)
   const [exporting, setExporting] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
 
   const periodRangeValues = periodRange({ month, year })
   const scopedFilters = {
@@ -150,8 +150,21 @@ const AppPage = () => {
     }
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const openCreate = () => {
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setValidationError(null)
+    setModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setModalOpen(false)
+    setForm(EMPTY_FORM)
+    setValidationError(null)
+    setEditingId(null)
+  }
+
+  const handleSubmit = async () => {
     const amount = Math.round(parseFloat(form.amount) * 100)
 
     if (!Number.isFinite(amount) || amount <= 0) {
@@ -176,9 +189,10 @@ const AppPage = () => {
         await api.createTransaction(token, payload)
         toast.showSuccess('Transacción agregada')
       }
+      setModalOpen(false)
       setForm(EMPTY_FORM)
       setValidationError(null)
-      setShowForm(false)
+      setEditingId(null)
       recheckAlerts()
       refresh(scopedFilters)
     } catch (err) {
@@ -196,15 +210,7 @@ const AppPage = () => {
       category: transaction.category ?? ''
     })
     setValidationError(null)
-    setShowForm(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const handleCancelEdit = () => {
-    setEditingId(null)
-    setForm(EMPTY_FORM)
-    setValidationError(null)
-    setShowForm(false)
+    setModalOpen(true)
   }
 
   const handleConfirmDelete = async () => {
@@ -270,9 +276,9 @@ const AppPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setShowForm((v) => !v)} size="sm">
+          <Button onClick={openCreate} size="sm">
             <Plus size={14} aria-hidden="true" />
-            {showForm ? 'Cerrar formulario' : 'Agregar transacción'}
+            Agregar transacción
           </Button>
           <Menu as="div" className="relative">
             <MenuButton
@@ -360,70 +366,71 @@ const AppPage = () => {
         </div>
       </section>
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-          <SectionTitle icon={editingId ? Filter : Plus}>
-            {editingId ? 'Editar transacción' : 'Nueva transacción'}
-          </SectionTitle>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Tipo">
-              <Select name="type" value={form.type} onChange={handleChange} className="mt-1">
-                <option value="expense">Gasto</option>
-                <option value="income">Ingreso</option>
-              </Select>
-            </Field>
-            <Field label="Monto">
-              <Input
-                name="amount"
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={form.amount}
-                onChange={handleChange}
-                placeholder="0.00"
-                className="mt-1"
-              />
-            </Field>
-            <Field label="Fecha">
-              <Input name="date" type="date" value={form.date} onChange={handleChange} className="mt-1" />
-            </Field>
-            <Field label="Descripción">
-              <Input
-                name="description"
-                type="text"
-                maxLength={255}
-                value={form.description}
-                onChange={handleChange}
-                placeholder="Descripción opcional"
-                className="mt-1"
-              />
-            </Field>
-            <Field label="Categoría">
-              <Select name="category" value={form.category} onChange={handleChange} className="mt-1">
-                <option value="">Sin categoría</option>
-                {categories
-                  .filter((category) => category.type === form.type)
-                  .map((category) => (
-                    <option key={category.name} value={category.name}>
-                      {category.name}
-                    </option>
-                  ))}
-              </Select>
-            </Field>
-          </div>
-          {validationError && (
-            <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400" role="alert">
-              {validationError}
-            </p>
-          )}
-          <div className="mt-4 flex gap-2">
-            <Button type="submit">{editingId ? 'Guardar cambios' : 'Agregar transacción'}</Button>
-            <Button variant="secondary" onClick={handleCancelEdit}>
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      )}
+      <Dialog open={modalOpen} onClose={closeModal} className="relative z-50">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+            <DialogTitle className="text-lg font-semibold text-[#171d19] dark:text-white">
+              {editingId ? 'Editar transacción' : 'Nueva transacción'}
+            </DialogTitle>
+            <div className="mt-4 space-y-4">
+              <Field label="Tipo">
+                <Select name="type" value={form.type} onChange={handleChange}>
+                  <option value="expense">Gasto</option>
+                  <option value="income">Ingreso</option>
+                </Select>
+              </Field>
+              <Field label="Monto">
+                <Input
+                  name="amount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={form.amount}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                />
+              </Field>
+              <Field label="Fecha">
+                <Input name="date" type="date" value={form.date} onChange={handleChange} />
+              </Field>
+              <Field label="Descripción">
+                <Input
+                  name="description"
+                  type="text"
+                  maxLength={255}
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Descripción opcional"
+                />
+              </Field>
+              <Field label="Categoría">
+                <Select name="category" value={form.category} onChange={handleChange}>
+                  <option value="">Sin categoría</option>
+                  {categories
+                    .filter((category) => category.type === form.type)
+                    .map((category) => (
+                      <option key={category.name} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
+                </Select>
+              </Field>
+            </div>
+            {validationError && (
+              <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400" role="alert">
+                {validationError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <Button variant="secondary" onClick={closeModal}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSubmit}>{editingId ? 'Guardar cambios' : 'Agregar transacción'}</Button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">

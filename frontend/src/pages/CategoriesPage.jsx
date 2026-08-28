@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Check, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import PropTypes from 'prop-types'
 import { getToken } from '../api.js'
@@ -50,6 +50,92 @@ const TypeToggle = ({ type, onChange }) => (
 TypeToggle.propTypes = {
   type: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired
+}
+
+const CategoryCard = ({ category, onEdit, onDelete }) => (
+  <div className="group flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 transition-colors hover:bg-[#F8FAFC] dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/60">
+    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
+    <div className="min-w-0">
+      <p className="truncate text-sm font-medium text-[#171d19] dark:text-white">
+        {category.name}
+        <span
+          className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+            category.type === 'expense' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
+          }`}
+        >
+          {category.type === 'expense' ? 'Gasto' : 'Ingreso'}
+        </span>
+      </p>
+    </div>
+    <div className="ml-auto flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      <button
+        type="button"
+        onClick={() => onEdit(category)}
+        title="Editar categoría"
+        className="rounded-md p-1.5 text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#0e9f6e] dark:hover:bg-slate-700 dark:hover:text-white"
+      >
+        <Pencil size={15} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onDelete(category)}
+        title="Eliminar categoría"
+        className="rounded-md p-1.5 text-[#64748B] transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+      >
+        <Trash2 size={15} aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+)
+
+CategoryCard.propTypes = {
+  category: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    color: PropTypes.string.isRequired
+  }).isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired
+}
+
+const CategorySection = ({ title, icon: Icon, items, emptyText, onEdit, onDelete }) => (
+  <section className="mb-8">
+    <div className="mb-4 flex items-center gap-2">
+      <span
+        className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+          Icon === ArrowDownRight
+            ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'
+            : 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+        }`}
+      >
+        <Icon size={15} aria-hidden="true" />
+      </span>
+      <h2 className="text-base font-semibold text-[#171d19] dark:text-white">
+        {title} ({items.length})
+      </h2>
+    </div>
+    {items.length === 0 ? (
+      <p className="rounded-xl border border-dashed border-[#E2E8F0] p-4 text-center text-sm text-[#64748B] dark:border-slate-700 dark:text-slate-400">
+        {emptyText}
+      </p>
+    ) : (
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((category) => (
+          <CategoryCard key={category.id} category={category} onEdit={onEdit} onDelete={onDelete} />
+        ))}
+      </div>
+    )}
+  </section>
+)
+
+CategorySection.propTypes = {
+  title: PropTypes.string.isRequired,
+  icon: PropTypes.elementType.isRequired,
+  items: PropTypes.array.isRequired,
+  emptyText: PropTypes.string.isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired
 }
 
 const CategoriesPage = () => {
@@ -142,9 +228,9 @@ const CategoriesPage = () => {
             Organizá tus ingresos y gastos con tus propios colores.
           </p>
         </div>
-        <Button size="sm" className="bg-[#6366f1] hover:bg-[#5b5bd6]" onClick={openCreate}>
+        <Button size="sm" onClick={openCreate}>
           <Plus size={14} aria-hidden="true" />
-          + Nueva
+          Agregar categoría
         </Button>
       </div>
 
@@ -162,48 +248,24 @@ const CategoriesPage = () => {
           />
         </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <div
-              key={category.id}
-              className="group flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 transition-colors hover:bg-[#F8FAFC] dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/60"
-            >
-              <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-[#171d19] dark:text-white">
-                  {category.name}
-                  <span
-                    className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                      category.type === 'expense'
-                        ? 'bg-red-50 text-red-600'
-                        : 'bg-green-50 text-green-600'
-                    }`}
-                  >
-                    {category.type === 'expense' ? 'Gasto' : 'Ingreso'}
-                  </span>
-                </p>
-              </div>
-              <div className="ml-auto flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                <button
-                  type="button"
-                  onClick={() => openEdit(category)}
-                  title="Editar categoría"
-                  className="rounded-md p-1.5 text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#0e9f6e] dark:hover:bg-slate-700 dark:hover:text-white"
-                >
-                  <Pencil size={15} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeletingCategory(category)}
-                  title="Eliminar categoría"
-                  className="rounded-md p-1.5 text-[#64748B] transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                >
-                  <Trash2 size={15} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <>
+          <CategorySection
+            title="Gastos"
+            icon={ArrowDownRight}
+            items={categories.filter((category) => category.type === 'expense')}
+            emptyText="Sin categorías de gasto."
+            onEdit={openEdit}
+            onDelete={setDeletingCategory}
+          />
+          <CategorySection
+            title="Ingresos"
+            icon={ArrowUpRight}
+            items={categories.filter((category) => category.type === 'income')}
+            emptyText="Sin categorías de ingreso."
+            onEdit={openEdit}
+            onDelete={setDeletingCategory}
+          />
+        </>
       )}
 
       <Dialog open={modalOpen} onClose={() => setModalOpen(false)} className="relative z-50">
@@ -259,7 +321,7 @@ const CategoriesPage = () => {
               <Button variant="secondary" onClick={() => setModalOpen(false)}>
                 Cancelar
               </Button>
-              <Button className="bg-[#6366f1] hover:bg-[#5b5bd6]" onClick={handleSubmit} disabled={saving}>
+              <Button onClick={handleSubmit} disabled={saving}>
                 {editingId ? 'Actualizar' : 'Crear'}
               </Button>
             </div>

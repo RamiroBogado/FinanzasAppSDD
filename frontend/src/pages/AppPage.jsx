@@ -111,7 +111,11 @@ const AppPage = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: value }))
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+      ...(name === 'type' ? { category: '' } : {})
+    }))
   }
 
   const handleFilterChange = (event) => {
@@ -398,7 +402,7 @@ const AppPage = () => {
               <Select name="category" value={form.category} onChange={handleChange} className="mt-1">
                 <option value="">Sin categoría</option>
                 {categories
-                  .filter((category) => category.type === 'expense')
+                  .filter((category) => category.type === form.type)
                   .map((category) => (
                     <option key={category.name} value={category.name}>
                       {category.name}

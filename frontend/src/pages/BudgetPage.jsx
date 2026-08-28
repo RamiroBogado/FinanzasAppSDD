@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Plus, ReceiptText, Wallet } from 'lucide-react'
+import { Plus, Wallet } from 'lucide-react'
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 import { api, getCategories, getToken } from '../api.js'
 import { getCategoryColor } from '../categoryColor.js'
 import { formatAmount, formatMonth } from '../format.js'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
 import Field from '../components/ui/Field.jsx'
-import PageHeader from '../components/ui/PageHeader.jsx'
 import Skeleton from '../components/ui/Skeleton.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx'
@@ -25,6 +25,7 @@ const BudgetPage = () => {
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState(null)
   const [validationError, setValidationError] = useState(null)
+  const [modalOpen, setModalOpen] = useState(false)
   const [deletingBudget, setDeletingBudget] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -57,13 +58,26 @@ const BudgetPage = () => {
       .catch(() => {})
   }
 
+  const openCreate = () => {
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setValidationError(null)
+    setModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setModalOpen(false)
+    setForm(EMPTY_FORM)
+    setValidationError(null)
+    setEditingId(null)
+  }
+
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const handleSubmit = async () => {
     const amount = Math.round(parseFloat(form.amount) * 100)
 
     if (!Number.isFinite(amount) || amount <= 0) {
@@ -101,8 +115,10 @@ const BudgetPage = () => {
         await api.createBudget(token, payload)
         toast.showSuccess('Presupuesto creado')
       }
+      setModalOpen(false)
       setForm(EMPTY_FORM)
       setValidationError(null)
+      setEditingId(null)
       recheckAlerts()
       refresh(selectedMonth)
     } catch (err) {
@@ -118,12 +134,7 @@ const BudgetPage = () => {
       threshold: budget.threshold != null ? String(budget.threshold) : ''
     })
     setValidationError(null)
-  }
-
-  const handleCancelEdit = () => {
-    setEditingId(null)
-    setForm(EMPTY_FORM)
-    setValidationError(null)
+    setModalOpen(true)
   }
 
   const handleConfirmDelete = async () => {
@@ -143,85 +154,85 @@ const BudgetPage = () => {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title={editingId ? 'Editar presupuesto' : 'Presupuestos'}
-        subtitle={
-          editingId
-            ? 'Modificá los datos y guardá los cambios.'
-            : `Límites mensuales por categoría para ${formatMonth(selectedMonth)}.`
-        }
-      />
-
-      <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-4 flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eff5ef] text-[#0e9f6e] dark:bg-[#0e9f6e]/10 dark:text-[#0e9f6e]">
-            {editingId ? <ReceiptText size={15} aria-hidden="true" /> : <Plus size={15} aria-hidden="true" />}
-          </span>
-          <h2 className="text-base font-semibold text-[#171d19] dark:text-white">
-            {editingId ? 'Editar presupuesto' : 'Nuevo presupuesto'}
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Categoría">
-            <Select name="category" value={form.category} onChange={handleChange} className="mt-1">
-              <option value="">Seleccioná una categoría</option>
-              {categories.map((category) => (
-                <option key={category.name} value={category.name}>
-                  {category.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Monto mensual">
-            <Input
-              name="amount"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={form.amount}
-              onChange={handleChange}
-              placeholder="0.00"
-              className="mt-1"
-            />
-          </Field>
-          <Field label="Umbral de aviso (%)" htmlFor="budget-threshold">
-            <Input
-              id="budget-threshold"
-              name="threshold"
-              type="number"
-              min="1"
-              max="100"
-              step="1"
-              value={form.threshold}
-              onChange={handleChange}
-              placeholder="80"
-              className="mt-1"
-            />
-            <p className="mt-1 text-xs text-[#64748B] dark:text-slate-400">
-              Opcional. Se avisa cuando el gasto alcanza este porcentaje del límite.
-            </p>
-          </Field>
-          <Field label="Mes">
-            <Input type="month" value={selectedMonth} disabled className="mt-1 opacity-70" />
-            <p className="mt-1 text-xs text-[#64748B] dark:text-slate-400">
-              Definido por el selector de período del menú.
-            </p>
-          </Field>
-        </div>
-        {validationError && (
-          <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400" role="alert">
-            {validationError}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#171d19] dark:text-white">Presupuestos</h1>
+          <p className="mt-1 text-sm text-[#64748B] dark:text-slate-400">
+            Límites mensuales por categoría para {formatMonth(selectedMonth)}.
           </p>
-        )}
-        <div className="mt-4 flex gap-2">
-          <Button type="submit">{editingId ? 'Guardar cambios' : 'Agregar presupuesto'}</Button>
-          {editingId && (
-            <Button variant="secondary" onClick={handleCancelEdit}>
-              Cancelar
-            </Button>
-          )}
         </div>
-      </form>
+        <Button size="sm" onClick={openCreate}>
+          <Plus size={14} aria-hidden="true" />
+          Agregar presupuesto
+        </Button>
+      </div>
+
+      <Dialog open={modalOpen} onClose={closeModal} className="relative z-50">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-md rounded-xl border border-[#E2E8F0] bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+            <DialogTitle className="text-lg font-semibold text-[#171d19] dark:text-white">
+              {editingId ? 'Editar presupuesto' : 'Nuevo presupuesto'}
+            </DialogTitle>
+            <div className="mt-4 space-y-4">
+              <Field label="Categoría">
+                <Select name="category" value={form.category} onChange={handleChange}>
+                  <option value="">Seleccioná una categoría</option>
+                  {categories.map((category) => (
+                    <option key={category.name} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Monto mensual">
+                <Input
+                  name="amount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={form.amount}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                />
+              </Field>
+              <Field label="Umbral de aviso (%)" htmlFor="budget-threshold">
+                <Input
+                  id="budget-threshold"
+                  name="threshold"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value={form.threshold}
+                  onChange={handleChange}
+                  placeholder="80"
+                />
+                <p className="mt-1 text-xs text-[#64748B] dark:text-slate-400">
+                  Opcional. Se avisa cuando el gasto alcanza este porcentaje del límite.
+                </p>
+              </Field>
+              <Field label="Mes">
+                <Input type="month" value={selectedMonth} disabled className="opacity-70" />
+                <p className="mt-1 text-xs text-[#64748B] dark:text-slate-400">
+                  Definido por el selector de período del menú.
+                </p>
+              </Field>
+            </div>
+            {validationError && (
+              <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400" role="alert">
+                {validationError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <Button variant="secondary" onClick={closeModal}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSubmit}>{editingId ? 'Guardar cambios' : 'Agregar presupuesto'}</Button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
 
       <section className="rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-card dark:border-slate-800 dark:bg-slate-900">
         <h2 className="mb-4 text-base font-semibold text-[#171d19] dark:text-white">{formatMonth(selectedMonth)}</h2>

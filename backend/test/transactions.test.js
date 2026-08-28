@@ -7,6 +7,7 @@ let baseUrl
 
 beforeEach(async () => {
   getDatabase().prepare('DELETE FROM transactions').run()
+  getDatabase().prepare('DELETE FROM categories').run()
   getDatabase().prepare('DELETE FROM users').run()
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
@@ -52,7 +53,27 @@ function validTransaction(overrides = {}) {
   }
 }
 
+async function ensureCategory(token, name, type = 'expense', color = '#ef4444') {
+  const { status } = await request('/api/categories', {
+    method: 'POST',
+    body: { name, type, color },
+    token
+  })
+  if (status !== 201 && status !== 400) {
+    throw new Error(`Failed to create category: ${status}`)
+  }
+}
+
 async function createTransaction(token, overrides) {
+  const category = overrides?.category
+  if (
+    category !== undefined &&
+    category !== null &&
+    String(category).trim() !== '' &&
+    String(category).length <= 32
+  ) {
+    await ensureCategory(token, String(category).trim(), overrides.type || 'expense')
+  }
   return request('/api/transactions', {
     method: 'POST',
     body: validTransaction(overrides),
@@ -335,6 +356,7 @@ describe('actualización de transacciones', () => {
   it('modifica la categoría de una transacción propia', async () => {
     const token = await registerAndLogin()
     const { body: created } = await createTransaction(token, { category: 'Comida' })
+    await ensureCategory(token, 'Salud')
 
     const { status, body } = await request(`/api/transactions/${created.id}`, {
       method: 'PUT',
@@ -409,6 +431,41 @@ describe('eliminación de transacciones', () => {
     const { status } = await request('/api/transactions/99999', { method: 'DELETE', token })
 
     expect(status).toBe(404)
+  })
+})
+
+describe('validación de categorías en transacciones', () => {
+  it('crea una transacción con una categoría válida', async () => {
+    const token = await registerAndLogin()
+    await ensureCategory(token, 'Comida')
+
+    const { status, body } = await createTransaction(token, { category: 'Comida' })
+
+    expect(status).toBe(201)
+    expect(body.category).toBe('Comida')
+  })
+
+  it('rechaza una transacción con categoría inexistente', async () => {
+    const token = await registerAndLogin()
+
+    const { status, body } = await request('/api/transactions', {
+      method: 'POST',
+      body: validTransaction({ category: 'Inexistente' }),
+      token
+    })
+
+    expect(status).toBe(400)
+    expect(body.error).toBe('La categoría no existe en tu catálogo')
+  })
+
+  it('acepta una categoría con diferencia de mayúsculas', async () => {
+    const token = await registerAndLogin()
+    await ensureCategory(token, 'Comida')
+
+    const { status, body } = await createTransaction(token, { category: 'comida' })
+
+    expect(status).toBe(201)
+    expect(body.category).toBe('comida')
   })
 })
 

@@ -22,3 +22,11 @@ export function categoryColor(name) {
 
   return PALETTE[Math.abs(hash) % PALETTE.length]
 }
+
+export function getCategoryColor(name, userCategories = []) {
+  const match = userCategories.find(
+    (category) => category.name.toLowerCase() === (name ?? '').trim().toLowerCase()
+  )
+
+  return match?.color || categoryColor(name)
+}

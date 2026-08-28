@@ -9,6 +9,7 @@ beforeEach(async () => {
   getDatabase().prepare('DELETE FROM alerts').run()
   getDatabase().prepare('DELETE FROM budgets').run()
   getDatabase().prepare('DELETE FROM transactions').run()
+  getDatabase().prepare('DELETE FROM categories').run()
   getDatabase().prepare('DELETE FROM users').run()
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
@@ -51,15 +52,33 @@ function currentMonth() {
 
 const MONTH = currentMonth()
 
+async function ensureCategory(token, name, type = 'expense', color = '#ef4444') {
+  const { status } = await request('/api/categories', {
+    method: 'POST',
+    body: { name, type, color },
+    token
+  })
+  if (status !== 201 && status !== 400) {
+    throw new Error(`Failed to create category: ${status}`)
+  }
+}
+
 async function createBudget(token, overrides) {
+  const category = overrides?.category ?? 'Comida'
+  if (String(category).trim() !== '' && String(category).length <= 32) {
+    await ensureCategory(token, String(category).trim(), 'expense')
+  }
   return request('/api/budgets', {
     method: 'POST',
-    body: { category: 'Comida', month: MONTH, amount: 100000, ...overrides },
+    body: { category, month: MONTH, amount: 100000, ...overrides },
     token
   })
 }
 
 async function createExpense(token, category, amount) {
+  if (String(category).trim() !== '' && String(category).length <= 32) {
+    await ensureCategory(token, String(category).trim(), 'expense')
+  }
   return request('/api/transactions', {
     method: 'POST',
     body: { type: 'expense', amount, date: `${MONTH}-10`, category },

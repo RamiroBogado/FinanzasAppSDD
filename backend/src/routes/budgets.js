@@ -8,13 +8,14 @@ import {
   toPublicBudget,
   updateBudget
 } from '../budgets.js'
+import { getDatabase } from '../db.js'
 
 const router = Router()
 
 const MAX_CATEGORY_LENGTH = 32
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/
 
-function validatePayload(body) {
+function validatePayload(body, userId) {
   const { category, month, amount, threshold } = body ?? {}
 
   if (typeof category !== 'string' || category.trim() === '') {
@@ -33,6 +34,13 @@ function validatePayload(body) {
     return { error: 'El monto debe ser un número entero positivo (en centavos)' }
   }
 
+  const cat = getDatabase()
+    .prepare('SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?) AND type = \'expense\' LIMIT 1')
+    .get(userId, category.trim())
+  if (!cat) {
+    return { error: 'La categoría no existe en tu catálogo o no es de tipo gasto' }
+  }
+
   let normalizedThreshold = null
 
   if (threshold !== undefined && threshold !== null && threshold !== '') {
@@ -49,7 +57,7 @@ function validatePayload(body) {
 router.use(requireAuth)
 
 router.post('/', (req, res) => {
-  const result = validatePayload(req.body)
+  const result = validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
@@ -98,7 +106,7 @@ router.get('/:id', (req, res) => {
 })
 
 router.put('/:id', (req, res) => {
-  const result = validatePayload(req.body)
+  const result = validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })

@@ -12,7 +12,7 @@ import {
   Wallet
 } from 'lucide-react'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { api, getToken } from '../api.js'
+import { api, getCategories, getToken } from '../api.js'
 import { formatAmount, formatDate, formatMonth, toLocalDate } from '../format.js'
 import Button from '../components/ui/Button.jsx'
 import Input, { Select } from '../components/ui/Input.jsx'
@@ -23,16 +23,6 @@ import StatCard from '../components/ui/StatCard.jsx'
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx'
 import { useToast } from '../components/ui/ToastProvider.jsx'
 import { periodRange, toMonthString, usePeriod } from '../context/PeriodContext.jsx'
-
-const SUGGESTED_CATEGORIES = [
-  'Comida',
-  'Transporte',
-  'Vivienda',
-  'Sueldo',
-  'Salud',
-  'Entretenimiento',
-  'Otros'
-]
 
 const EMPTY_FORM = {
   type: 'expense',
@@ -72,7 +62,7 @@ const AppPage = () => {
   const toast = useToast()
   const { month, year } = usePeriod()
   const [transactions, setTransactions] = useState([])
-  const [categoryOptions, setCategoryOptions] = useState(SUGGESTED_CATEGORIES)
+  const [categories, setCategories] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [appliedFilters, setAppliedFilters] = useState(EMPTY_FILTERS)
@@ -95,22 +85,18 @@ const AppPage = () => {
       setLoading(true)
       api
         .listTransactions(token, params)
-        .then((data) => {
-          setTransactions(data)
-          if (!hasActiveFilters(appliedFilters)) {
-            setCategoryOptions([
-              ...new Set([
-                ...SUGGESTED_CATEGORIES,
-                ...data.map((transaction) => transaction.category).filter(Boolean)
-              ])
-            ])
-          }
-        })
+        .then(setTransactions)
         .catch((err) => toast.showError(err.message))
         .finally(() => setLoading(false))
     },
-    [token, toast, appliedFilters]
+    [token, toast]
   )
+
+  useEffect(() => {
+    getCategories(token)
+      .then(setCategories)
+      .catch(() => {})
+  }, [token])
 
   useEffect(() => {
     refresh(scopedFilters)
@@ -125,7 +111,11 @@ const AppPage = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target
-    setForm((current) => ({ ...current, [name]: value }))
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+      ...(name === 'type' ? { category: '' } : {})
+    }))
   }
 
   const handleFilterChange = (event) => {
@@ -340,9 +330,9 @@ const AppPage = () => {
           <Field label="Filtrar por categoría">
             <Select name="category" value={filters.category} onChange={handleFilterChange} className="mt-1">
               <option value="">Todas</option>
-              {categoryOptions.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+              {categories.map((category) => (
+                <option key={category.name} value={category.name}>
+                  {category.name}
                 </option>
               ))}
             </Select>
@@ -409,21 +399,16 @@ const AppPage = () => {
               />
             </Field>
             <Field label="Categoría">
-              <Input
-                name="category"
-                type="text"
-                maxLength={32}
-                list="category-suggestions"
-                value={form.category}
-                onChange={handleChange}
-                placeholder="Categoría opcional"
-                className="mt-1"
-              />
-              <datalist id="category-suggestions">
-                {SUGGESTED_CATEGORIES.map((category) => (
-                  <option key={category} value={category} />
-                ))}
-              </datalist>
+              <Select name="category" value={form.category} onChange={handleChange} className="mt-1">
+                <option value="">Sin categoría</option>
+                {categories
+                  .filter((category) => category.type === form.type)
+                  .map((category) => (
+                    <option key={category.name} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+              </Select>
             </Field>
           </div>
           {validationError && (

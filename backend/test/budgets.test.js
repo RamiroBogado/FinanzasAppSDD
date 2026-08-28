@@ -8,6 +8,7 @@ let baseUrl
 beforeEach(async () => {
   getDatabase().prepare('DELETE FROM budgets').run()
   getDatabase().prepare('DELETE FROM transactions').run()
+  getDatabase().prepare('DELETE FROM categories').run()
   getDatabase().prepare('DELETE FROM users').run()
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
@@ -52,11 +53,29 @@ function validBudget(overrides = {}) {
   }
 }
 
+async function ensureCategory(token, name, type = 'expense', color = '#ef4444') {
+  const { status } = await request('/api/categories', {
+    method: 'POST',
+    body: { name, type, color },
+    token
+  })
+  if (status !== 201 && status !== 400) {
+    throw new Error(`Failed to create category: ${status}`)
+  }
+}
+
 async function createBudget(token, overrides) {
+  const category = overrides?.category ?? 'Comida'
+  if (String(category).trim() !== '' && String(category).length <= 32) {
+    await ensureCategory(token, String(category).trim(), 'expense')
+  }
   return request('/api/budgets', { method: 'POST', body: validBudget(overrides), token })
 }
 
 async function createExpense(token, category, amount, date) {
+  if (String(category).trim() !== '' && String(category).length <= 32) {
+    await ensureCategory(token, String(category).trim(), 'expense')
+  }
   return request('/api/transactions', {
     method: 'POST',
     body: { type: 'expense', amount, date, category },
@@ -317,7 +336,7 @@ describe('actualización de presupuestos', () => {
 
     const { status, body } = await request(`/api/budgets/${otro.id}`, {
       method: 'PUT',
-      body: { category: 'comida', month: '2026-08', amount: 50000 },
+      body: { category: 'Comida', month: '2026-08', amount: 50000 },
       token
     })
 
@@ -329,6 +348,7 @@ describe('actualización de presupuestos', () => {
     const tokenA = await registerAndLogin({ username: 'rama', email: 'rama@example.com' })
     const tokenB = await registerAndLogin({ username: 'otro', email: 'otro@example.com' })
     const { body: created } = await createBudget(tokenA)
+    await ensureCategory(tokenB, 'Comida')
 
     const { status, body } = await request(`/api/budgets/${created.id}`, {
       method: 'PUT',
@@ -366,6 +386,40 @@ describe('eliminación de presupuestos', () => {
     for (const response of responses) {
       expect(response.status).toBe(404)
     }
+  })
+})
+
+describe('validación de categorías en presupuestos', () => {
+  it('crea un presupuesto con una categoría de gasto válida', async () => {
+    const token = await registerAndLogin()
+
+    const { status, body } = await createBudget(token, { category: 'Comida' })
+
+    expect(status).toBe(201)
+    expect(body.category).toBe('Comida')
+  })
+
+  it('rechaza un presupuesto con una categoría de ingreso', async () => {
+    const token = await registerAndLogin()
+    await ensureCategory(token, 'Sueldo', 'income')
+
+    const { status, body } = await createBudget(token, { category: 'Sueldo' })
+
+    expect(status).toBe(400)
+    expect(body.error).toBe('La categoría no existe en tu catálogo o no es de tipo gasto')
+  })
+
+  it('rechaza un presupuesto con categoría inexistente', async () => {
+    const token = await registerAndLogin()
+
+    const { status, body } = await request('/api/budgets', {
+      method: 'POST',
+      body: validBudget({ category: 'Inexistente' }),
+      token
+    })
+
+    expect(status).toBe(400)
+    expect(body.error).toBe('La categoría no existe en tu catálogo o no es de tipo gasto')
   })
 })
 

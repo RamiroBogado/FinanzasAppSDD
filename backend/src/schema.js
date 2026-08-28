@@ -44,6 +44,23 @@ const CREATE_BUDGETS_INDEX_SQL = `
 CREATE INDEX IF NOT EXISTS idx_budgets_user_month ON budgets (user_id, month)
 `
 
+const CREATE_CATEGORIES_SQL = `
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  name_lower TEXT GENERATED ALWAYS AS (lower(name)) STORED,
+  type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
+  color TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+)
+`
+
+const CREATE_CATEGORIES_INDEX_SQL = `
+CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_user_name ON categories (user_id, name_lower)
+`
+
 const CREATE_ALERTS_SQL = `
 CREATE TABLE IF NOT EXISTS alerts (
   id TEXT PRIMARY KEY,
@@ -147,6 +164,8 @@ function ensureTable(db, tableName, createSql, columnAlters) {
   }
 }
 
+const CATEGORIES_ALTERS = {}
+
 export function initSchema(db) {
   ensureTable(db, 'users', CREATE_USERS_SQL, USERS_ALTERS)
   ensureTable(db, 'transactions', CREATE_TRANSACTIONS_SQL, TRANSACTIONS_ALTERS)
@@ -154,9 +173,56 @@ export function initSchema(db) {
   ensureTable(db, 'goals', CREATE_GOALS_SQL, GOALS_ALTERS)
   ensureTable(db, 'alerts', CREATE_ALERTS_SQL, {})
   ensureTable(db, 'chat_messages', CREATE_CHAT_MESSAGES_SQL, {})
+  ensureTable(db, 'categories', CREATE_CATEGORIES_SQL, CATEGORIES_ALTERS)
   db.exec(CREATE_TRANSACTIONS_INDEX_SQL)
   db.exec(CREATE_BUDGETS_INDEX_SQL)
   db.exec(CREATE_GOALS_INDEX_SQL)
   db.exec(CREATE_ALERTS_INDEX_SQL)
   db.exec(CREATE_CHAT_MESSAGES_INDEX_SQL)
+  db.exec(CREATE_CATEGORIES_INDEX_SQL)
+}
+
+const PALETTE = [
+  '#6366f1', '#8b5cf6', '#a78bfa', '#f59e0b', '#ef4444',
+  '#10b981', '#3b82f6', '#ec4899', '#14b8a6', '#f97316'
+]
+
+function simpleHash(str) {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
+export function seedCategoriesFromTransactions(db) {
+  const rows = db.prepare(`
+    SELECT DISTINCT user_id, category, type
+    FROM transactions
+    WHERE category IS NOT NULL AND category != ''
+  `).all()
+
+  const grouped = new Map()
+  for (const row of rows) {
+    const key = `${row.user_id}|${row.category}`
+    if (!grouped.has(key)) {
+      grouped.set(key, { user_id: row.user_id, name: row.category, expense: 0, income: 0 })
+    }
+    const g = grouped.get(key)
+    if (row.type === 'expense') g.expense++
+    else g.income++
+  }
+
+  const insert = db.prepare(`
+    INSERT OR IGNORE INTO categories (user_id, name, type, color, created_at)
+    VALUES (?, ?, ?, ?, datetime('now'))
+  `)
+
+  for (const [, g] of grouped) {
+    const type = g.expense >= g.income ? 'expense' : 'income'
+    const colorIndex = simpleHash(`${g.user_id}|${g.name}`) % PALETTE.length
+    const color = PALETTE[colorIndex]
+    insert.run(g.user_id, g.name, type, color)
+  }
 }

@@ -9,6 +9,7 @@ import {
   toPublicTransaction,
   updateTransaction
 } from '../transactions.js'
+import { getDatabase } from '../db.js'
 
 const router = Router()
 
@@ -36,7 +37,7 @@ function toToday() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function validatePayload(body) {
+function validatePayload(body, userId) {
   const { type, amount, date, description, category } = body ?? {}
 
   if (typeof type !== 'string' || !TRANSACTION_TYPES.includes(type)) {
@@ -65,6 +66,19 @@ function validatePayload(body) {
     (typeof category !== 'string' || category.length > MAX_CATEGORY_LENGTH)
   ) {
     return { error: 'La categoría no puede superar los 32 caracteres' }
+  }
+
+  if (
+    category !== undefined &&
+    category !== null &&
+    category.trim() !== ''
+  ) {
+    const exists = getDatabase()
+      .prepare('SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?) LIMIT 1')
+      .get(userId, category.trim())
+    if (!exists) {
+      return { error: 'La categoría no existe en tu catálogo' }
+    }
   }
 
   return {
@@ -107,7 +121,7 @@ function validateListQuery(query) {
 router.use(requireAuth)
 
 router.post('/', (req, res) => {
-  const result = validatePayload(req.body)
+  const result = validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
@@ -169,7 +183,7 @@ router.get('/:id', (req, res) => {
 })
 
 router.put('/:id', (req, res) => {
-  const result = validatePayload(req.body)
+  const result = validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })

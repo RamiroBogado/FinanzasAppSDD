@@ -10,6 +10,7 @@ beforeEach(async () => {
   getDatabase().prepare('DELETE FROM goals').run()
   getDatabase().prepare('DELETE FROM budgets').run()
   getDatabase().prepare('DELETE FROM transactions').run()
+  getDatabase().prepare('DELETE FROM categories').run()
   getDatabase().prepare('DELETE FROM users').run()
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
@@ -49,6 +50,17 @@ async function registerAndLogin({ username = 'rama', email = 'rama@example.com' 
   return body.token
 }
 
+async function ensureCategory(token, name, type = 'expense', color = '#ef4444') {
+  const { status } = await request('/api/categories', {
+    method: 'POST',
+    body: { name, type, color },
+    token
+  })
+  if (status !== 201 && status !== 400) {
+    throw new Error(`Failed to create category: ${status}`)
+  }
+}
+
 async function createTransaction(token, overrides = {}) {
   const payload = {
     type: 'expense',
@@ -58,6 +70,8 @@ async function createTransaction(token, overrides = {}) {
     description: 'Supermercado',
     ...overrides
   }
+
+  await ensureCategory(token, payload.category, payload.type)
 
   const { status, body } = await request('/api/transactions', {
     method: 'POST',

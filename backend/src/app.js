@@ -2,6 +2,7 @@ import express from 'express'
 import alertsRouter from './routes/alerts.js'
 import authRouter from './routes/auth.js'
 import budgetsRouter from './routes/budgets.js'
+import categoriesRouter from './routes/categories.js'
 import chatRouter from './routes/chat.js'
 import goalsRouter from './routes/goals.js'
 import transactionsRouter from './routes/transactions.js'
@@ -20,5 +21,6 @@ app.use('/api/budgets', budgetsRouter)
 app.use('/api/goals', goalsRouter)
 app.use('/api/alerts', alertsRouter)
 app.use('/api/chat', chatRouter)
+app.use('/api/categories', categoriesRouter)
 
 export default app

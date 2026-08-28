@@ -92,5 +92,47 @@ export const api = {
   listChatMessages: (token) => request('/chat/messages', { token }),
   sendChatMessage: (token, message) =>
     request('/chat/messages', { method: 'POST', body: { message }, token }),
-  clearChatMessages: (token) => request('/chat/messages', { method: 'DELETE', token })
+  clearChatMessages: (token) => request('/chat/messages', { method: 'DELETE', token }),
+  listCategories: (token) => request('/categories', { token }),
+  createCategory: (token, payload) =>
+    request('/categories', { method: 'POST', body: payload, token }),
+  updateCategory: (token, id, payload) =>
+    request(`/categories/${id}`, { method: 'PUT', body: payload, token }),
+  deleteCategory: (token, id) => request(`/categories/${id}`, { method: 'DELETE', token })
 }
+
+const CATEGORIES_TTL = 30_000
+let categoriesCache = { data: [], expiry: 0 }
+
+export const getCategories = (token) => {
+  if (Date.now() < categoriesCache.expiry) {
+    return Promise.resolve(categoriesCache.data)
+  }
+
+  return api.listCategories(token).then((data) => {
+    categoriesCache = { data, expiry: Date.now() + CATEGORIES_TTL }
+    return data
+  })
+}
+
+const invalidateCategoriesCache = () => {
+  categoriesCache = { data: [], expiry: 0 }
+}
+
+export const createCategory = (token, payload) =>
+  api.createCategory(token, payload).then((data) => {
+    invalidateCategoriesCache()
+    return data
+  })
+
+export const updateCategory = (token, id, payload) =>
+  api.updateCategory(token, id, payload).then((data) => {
+    invalidateCategoriesCache()
+    return data
+  })
+
+export const deleteCategoryCached = (token, id) =>
+  api.deleteCategory(token, id).then((data) => {
+    invalidateCategoriesCache()
+    return data
+  })

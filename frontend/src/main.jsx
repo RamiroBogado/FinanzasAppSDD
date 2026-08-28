@@ -7,6 +7,7 @@ import { ToastProvider } from './components/ui/ToastProvider.jsx'
 import AlertsPage from './pages/AlertsPage.jsx'
 import AppPage from './pages/AppPage.jsx'
 import BudgetPage from './pages/BudgetPage.jsx'
+import CategoriesPage from './pages/CategoriesPage.jsx'
 import ConfigPage from './pages/ConfigPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import GoalPage from './pages/GoalPage.jsx'
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')).render(
                 >
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/transacciones" element={<AppPage />} />
+                  <Route path="/categorias" element={<CategoriesPage />} />
                   <Route path="/presupuestos" element={<BudgetPage />} />
                   <Route path="/metas" element={<GoalPage />} />
                   <Route path="/alertas" element={<AlertsPage />} />

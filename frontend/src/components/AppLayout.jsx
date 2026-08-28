@@ -14,6 +14,7 @@ import {
   PiggyBank,
   Settings,
   Sun,
+  Tag,
   Target,
   Wallet
 } from 'lucide-react'
@@ -29,6 +30,7 @@ const COLLAPSE_KEY = 'finanzasapp-sidebar-collapsed'
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Panel', icon: LayoutDashboard },
   { to: '/transacciones', label: 'Transacciones', icon: ArrowLeftRight },
+  { to: '/categorias', label: 'Categorías', icon: Tag },
   { to: '/presupuestos', label: 'Presupuestos', icon: PiggyBank },
   { to: '/metas', label: 'Metas', icon: Target },
   { to: '/alertas', label: 'Alertas', icon: Bell },

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Plus, ReceiptText, Wallet } from 'lucide-react'
-import { api, getToken } from '../api.js'
-import { categoryColor } from '../categoryColor.js'
+import { api, getCategories, getToken } from '../api.js'
+import { getCategoryColor } from '../categoryColor.js'
 import { formatAmount, formatMonth } from '../format.js'
 import Button from '../components/ui/Button.jsx'
-import Input from '../components/ui/Input.jsx'
+import Input, { Select } from '../components/ui/Input.jsx'
 import Field from '../components/ui/Field.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
 import Skeleton from '../components/ui/Skeleton.jsx'
@@ -12,16 +12,6 @@ import EmptyState from '../components/ui/EmptyState.jsx'
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx'
 import { useToast } from '../components/ui/ToastProvider.jsx'
 import { toMonthString, usePeriod } from '../context/PeriodContext.jsx'
-
-const SUGGESTED_CATEGORIES = [
-  'Comida',
-  'Transporte',
-  'Vivienda',
-  'Sueldo',
-  'Salud',
-  'Entretenimiento',
-  'Otros'
-]
 
 const EMPTY_FORM = { category: '', amount: '', threshold: '' }
 
@@ -31,7 +21,7 @@ const BudgetPage = () => {
   const { month: periodMonth, year: periodYear } = usePeriod()
   const selectedMonth = toMonthString({ month: periodMonth, year: periodYear })
   const [budgets, setBudgets] = useState([])
-  const [categoryOptions, setCategoryOptions] = useState(SUGGESTED_CATEGORIES)
+  const [categories, setCategories] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState(null)
   const [validationError, setValidationError] = useState(null)
@@ -43,17 +33,18 @@ const BudgetPage = () => {
       setLoading(true)
       api
         .listBudgets(token, { month: selected })
-        .then((data) => {
-          setBudgets(data)
-          setCategoryOptions([
-            ...new Set([...SUGGESTED_CATEGORIES, ...data.map((budget) => budget.category)])
-          ])
-        })
+        .then(setBudgets)
         .catch((err) => toast.showError(err.message))
         .finally(() => setLoading(false))
     },
     [token, toast]
   )
+
+  useEffect(() => {
+    getCategories(token)
+      .then((data) => setCategories(data.filter((category) => category.type === 'expense')))
+      .catch(() => {})
+  }, [token])
 
   useEffect(() => {
     refresh(selectedMonth)
@@ -172,21 +163,14 @@ const BudgetPage = () => {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Categoría">
-            <Input
-              name="category"
-              type="text"
-              maxLength={32}
-              list="budget-category-suggestions"
-              value={form.category}
-              onChange={handleChange}
-              placeholder="Categoría"
-              className="mt-1"
-            />
-            <datalist id="budget-category-suggestions">
-              {categoryOptions.map((category) => (
-                <option key={category} value={category} />
+            <Select name="category" value={form.category} onChange={handleChange} className="mt-1">
+              <option value="">Seleccioná una categoría</option>
+              {categories.map((category) => (
+                <option key={category.name} value={category.name}>
+                  {category.name}
+                </option>
               ))}
-            </datalist>
+            </Select>
           </Field>
           <Field label="Monto mensual">
             <Input
@@ -279,7 +263,7 @@ const BudgetPage = () => {
                         <p className="truncate text-sm font-medium text-[#171d19] dark:text-slate-100">
                           <span
                             className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
-                            style={{ backgroundColor: categoryColor(budget.category) }}
+                            style={{ backgroundColor: getCategoryColor(budget.category, categories) }}
                             aria-hidden="true"
                           />
                           {budget.category}

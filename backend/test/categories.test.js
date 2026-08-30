@@ -32,6 +32,17 @@ async function request(path, { method = 'GET', body, token } = {}) {
   return { status: response.status, body: response.status === 204 ? null : await response.json() }
 }
 
+function getData(response) {
+  if (!response) return response
+  if (response.body && response.body.data !== undefined) {
+    return response.body.data
+  }
+  if (response.data !== undefined) {
+    return response.data
+  }
+  return response
+}
+
 async function registerAndLogin({ username = 'rama', email = 'rama@example.com' } = {}) {
   await request('/api/auth/register', {
     method: 'POST',
@@ -58,7 +69,7 @@ describe('creación de categorías', () => {
     const { status, body } = await createCategory(token)
 
     expect(status).toBe(201)
-    expect(body).toMatchObject({ name: 'Comida', type: 'expense', color: '#ef4444' })
+    expect(getData(body)).toMatchObject({ name: 'Comida', type: 'expense', color: '#ef4444' })
     expect(typeof body.id).toBe('number')
   })
 
@@ -67,7 +78,7 @@ describe('creación de categorías', () => {
     const { status, body } = await createCategory(token, { name: 'Sueldo', type: 'income', color: '#10b981' })
 
     expect(status).toBe(201)
-    expect(body).toMatchObject({ name: 'Sueldo', type: 'income', color: '#10b981' })
+    expect(getData(body)).toMatchObject({ name: 'Sueldo', type: 'income', color: '#10b981' })
   })
 
   it('rechaza un nombre duplicado sin distinguir mayúsculas', async () => {
@@ -121,7 +132,7 @@ describe('listado de categorías', () => {
     const { status, body } = await request('/api/categories', { token })
 
     expect(status).toBe(200)
-    expect(body).toEqual([])
+    expect(getData(body)).toEqual([])
   })
 
   it('devuelve las categorías ordenadas por nombre', async () => {
@@ -133,8 +144,8 @@ describe('listado de categorías', () => {
     const { status, body } = await request('/api/categories', { token })
 
     expect(status).toBe(200)
-    expect(body).toHaveLength(3)
-    expect(body.map((category) => category.name)).toEqual(['Comida', 'Sueldo', 'Transporte'])
+    expect(getData(body)).toHaveLength(3)
+    expect(getData(body).map((category) => category.name)).toEqual(['Comida', 'Sueldo', 'Transporte'])
   })
 
   it('no expone las categorías de otro usuario', async () => {
@@ -145,7 +156,7 @@ describe('listado de categorías', () => {
     const { status, body } = await request('/api/categories', { token: tokenB })
 
     expect(status).toBe(200)
-    expect(body).toEqual([])
+    expect(getData(body)).toEqual([])
   })
 })
 
@@ -161,7 +172,7 @@ describe('actualización de categorías', () => {
     })
 
     expect(status).toBe(200)
-    expect(body).toMatchObject({ id: created.id, name: 'Alimentación', type: 'expense', color: '#ef4444' })
+    expect(getData(body)).toMatchObject({ id: created.id, name: 'Alimentación', type: 'expense', color: '#ef4444' })
   })
 
   it('rechaza renombrar a un nombre existente', async () => {
@@ -205,7 +216,7 @@ describe('eliminación de categorías', () => {
     const { body: after } = await request('/api/categories', { token })
 
     expect(status).toBe(204)
-    expect(after).toEqual([])
+    expect(getData(after)).toEqual([])
   })
 
   it('responde 409 al eliminar una categoría usada en transacciones', async () => {

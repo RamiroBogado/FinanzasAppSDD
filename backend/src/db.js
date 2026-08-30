@@ -18,6 +18,10 @@ export function getDatabase() {
   if (!database) {
     ensureDatabasePath()
     database = new Database(isTest ? ':memory:' : dbPath)
+    if (!isTest) {
+      database.pragma('journal_mode = WAL')
+      database.pragma('synchronous = NORMAL')
+    }
     initSchema(database)
     seedCategoriesFromTransactions(database)
   }

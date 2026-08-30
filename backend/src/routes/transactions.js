@@ -93,7 +93,7 @@ function validatePayload(body, userId) {
 }
 
 function validateListQuery(query) {
-  const { type, category, q, from, to } = query
+  const { type, category, q, from, to, limit, offset } = query
 
   if (type && !TRANSACTION_TYPES.includes(type)) {
     return { error: 'El tipo de transacción debe ser income o expense' }
@@ -107,13 +107,20 @@ function validateListQuery(query) {
     return { error: 'La fecha debe tener formato AAAA-MM-DD' }
   }
 
+  const lim = parseInt(limit) || 50
+  if (lim > 200) {
+    return { error: 'El límite máximo es 200' }
+  }
+
   return {
     value: {
       type: typeof type === 'string' ? type : undefined,
       category: typeof category === 'string' ? category : undefined,
       q: typeof q === 'string' ? q : undefined,
       from: typeof from === 'string' ? from : undefined,
-      to: typeof to === 'string' ? to : undefined
+      to: typeof to === 'string' ? to : undefined,
+      limit: lim,
+      offset: parseInt(offset) || 0
     }
   }
 }
@@ -128,7 +135,6 @@ router.post('/', (req, res) => {
   }
 
   const transaction = createTransaction({ userId: req.userId, ...result.value })
-
   res.status(201).json(toPublicTransaction(transaction))
 })
 
@@ -141,7 +147,7 @@ router.get('/', (req, res) => {
 
   const transactions = listTransactions(req.userId, result.value)
 
-  res.json(transactions.map(toPublicTransaction))
+  res.json(transactions)
 })
 
 router.get('/export', async (req, res) => {
@@ -157,7 +163,8 @@ router.get('/export', async (req, res) => {
     return res.status(400).json({ error: result.error })
   }
 
-  const transactions = listTransactions(req.userId, result.value)
+  const transactionsResult = listTransactions(req.userId, result.value)
+  const transactions = transactionsResult.data
   const filename = `transacciones-${toToday()}.${exportFormat.extension}`
 
   res.setHeader('Content-Type', exportFormat.contentType)

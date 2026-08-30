@@ -4,14 +4,53 @@ const LIST_QUERY = `
 SELECT b.*,
   (SELECT COALESCE(SUM(t.amount), 0) FROM transactions t
    WHERE t.user_id = b.user_id AND t.type = 'expense'
-     AND t.date >= b.month || '-01' AND t.date <= b.month || '-31'
+     AND t.date >= b.month || '-01'
+     AND t.date <= date(b.month || '-01', '+1 month', '-1 day')
      AND lower(t.category) = lower(b.category)) AS spent
 FROM budgets b WHERE b.user_id = ?
 `
 
+const COUNT_QUERY = `
+SELECT COUNT(*) as count FROM budgets b WHERE b.user_id = ?
+`
+
 const ORDER_BY = ' ORDER BY b.month DESC, b.category COLLATE NOCASE ASC'
 
-export function listBudgets(userId, { month, category } = {}) {
+export function listBudgets(userId, { month, category, limit = 50, offset = 0 } = {}) {
+  const conditions = []
+  const params = []
+
+  if (month) {
+    conditions.push('b.month = ?')
+    params.push(month)
+  }
+
+  if (category) {
+    conditions.push('lower(b.category) = lower(?)')
+    params.push(category)
+  }
+
+  const countParams = [userId]
+  if (month) {
+    countParams.push(month)
+  }
+  if (category) {
+    countParams.push(category)
+  }
+
+  const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
+  const query = `${LIST_QUERY} ${whereClause}${ORDER_BY} LIMIT ? OFFSET ?`
+  const countQuery = `${COUNT_QUERY} ${whereClause}`
+
+  const total = getDatabase().prepare(countQuery).get(...[userId, ...(month ? [month] : []), ...(category ? [category] : [])]).count
+
+  const queryParams = [userId, ...params, Math.min(parseInt(limit) || 50, 200), parseInt(offset) || 0]
+  const data = getDatabase().prepare(query).all(...queryParams)
+
+  return { data, total, limit: Math.min(parseInt(limit) || 50, 200), offset: parseInt(offset) || 0 }
+}
+
+export function countBudgets(userId, { month, category } = {}) {
   const conditions = []
   const params = [userId]
 
@@ -25,12 +64,10 @@ export function listBudgets(userId, { month, category } = {}) {
     params.push(category)
   }
 
-  const query =
-    conditions.length > 0
-      ? `${LIST_QUERY} AND ${conditions.join(' AND ')}${ORDER_BY}`
-      : `${LIST_QUERY}${ORDER_BY}`
+  const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
+  const countQuery = `${COUNT_QUERY} ${whereClause}`
 
-  return getDatabase().prepare(query).all(...params)
+  return getDatabase().prepare(countQuery).get(...params.slice(1)).count
 }
 
 export function findBudgetById(id, userId) {

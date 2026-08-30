@@ -1,4 +1,4 @@
-import { Router } from 'express'
+﻿import { Router } from 'express'
 import { requireAuth } from '../middleware/requireAuth.js'
 import {
   createGoal,
@@ -86,9 +86,19 @@ router.post('/', (req, res) => {
 })
 
 router.get('/', (req, res) => {
-  const goals = listGoals(req.userId)
+  const { limit, offset } = req.query
 
-  res.json(goals.map(toPublicGoal))
+  const lim = Math.min(parseInt(limit) || 50, 200)
+  if (lim > 200) {
+    return res.status(400).json({ error: 'El límite máximo es 200' })
+  }
+
+  const goals = listGoals(req.userId, {
+    limit: Math.min(parseInt(limit) || 50, 200),
+    offset: parseInt(offset) || 0
+  })
+
+  res.json(goals)
 })
 
 router.get('/:id', (req, res) => {

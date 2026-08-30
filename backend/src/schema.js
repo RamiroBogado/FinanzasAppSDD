@@ -112,6 +112,22 @@ const CREATE_CHAT_MESSAGES_INDEX_SQL = `
 CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages (user_id, id)
 `
 
+const CREATE_PASSWORD_RESET_TOKENS_SQL = `
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  jti TEXT NOT NULL UNIQUE,
+  used INTEGER NOT NULL DEFAULT 0,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)
+`
+
+const CREATE_PASSWORD_RESET_TOKENS_INDEX_SQL = `
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens (user_id)
+`
+
 const USERS_ALTERS = {
   password_hash: "TEXT NOT NULL DEFAULT ''",
   created_at: "TEXT NOT NULL DEFAULT ''"
@@ -145,6 +161,8 @@ const GOALS_ALTERS = {
   created_at: "TEXT NOT NULL DEFAULT ''"
 }
 
+const PASSWORD_RESET_TOKENS_ALTERS = {}
+
 function ensureTable(db, tableName, createSql, columnAlters) {
   const exists = db
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?")
@@ -174,12 +192,14 @@ export function initSchema(db) {
   ensureTable(db, 'alerts', CREATE_ALERTS_SQL, {})
   ensureTable(db, 'chat_messages', CREATE_CHAT_MESSAGES_SQL, {})
   ensureTable(db, 'categories', CREATE_CATEGORIES_SQL, CATEGORIES_ALTERS)
+  ensureTable(db, 'password_reset_tokens', CREATE_PASSWORD_RESET_TOKENS_SQL, PASSWORD_RESET_TOKENS_ALTERS)
   db.exec(CREATE_TRANSACTIONS_INDEX_SQL)
   db.exec(CREATE_BUDGETS_INDEX_SQL)
   db.exec(CREATE_GOALS_INDEX_SQL)
   db.exec(CREATE_ALERTS_INDEX_SQL)
   db.exec(CREATE_CHAT_MESSAGES_INDEX_SQL)
   db.exec(CREATE_CATEGORIES_INDEX_SQL)
+  db.exec(CREATE_PASSWORD_RESET_TOKENS_INDEX_SQL)
 }
 
 const PALETTE = [

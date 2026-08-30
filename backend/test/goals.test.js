@@ -29,7 +29,19 @@ async function request(path, { method = 'GET', body, token } = {}) {
     body: body ? JSON.stringify(body) : undefined
   })
 
-  return { status: response.status, body: response.status === 204 ? null : await response.json() }
+  const responseBody = response.status === 204 ? null : await response.json()
+  return { status: response.status, body: responseBody }
+}
+
+function getData(response) {
+  if (!response) return response
+  if (response.body && response.body.data !== undefined) {
+    return response.body.data
+  }
+  if (response.data !== undefined) {
+    return response.data
+  }
+  return response
 }
 
 async function registerAndLogin({ username = 'rama', email = 'rama@example.com' } = {}) {
@@ -62,7 +74,7 @@ describe('creación de metas de ahorro', () => {
     const { status, body } = await createGoal(token)
 
     expect(status).toBe(201)
-    expect(body).toMatchObject({ name: 'Vacaciones', targetAmount: 500000 })
+    expect(getData(body)).toMatchObject({ name: 'Vacaciones', targetAmount: 500000 })
     expect(body.savedAmount).toBe(0)
     expect(body.deadline).toBeNull()
     expect(typeof body.id).toBe('number')
@@ -154,7 +166,7 @@ describe('listado de metas de ahorro', () => {
     const { status, body } = await request('/api/goals', { token })
 
     expect(status).toBe(200)
-    expect(body.map((goal) => goal.name)).toEqual(['Segunda', 'Primera'])
+    expect(getData(body).map((goal) => goal.name)).toEqual(['Segunda', 'Primera'])
   })
 
   it('nunca incluye metas de otros usuarios', async () => {
@@ -165,7 +177,7 @@ describe('listado de metas de ahorro', () => {
     const { status, body } = await request('/api/goals', { token: tokenB })
 
     expect(status).toBe(200)
-    expect(body).toEqual([])
+    expect(getData(body)).toEqual([])
   })
 })
 
@@ -211,7 +223,7 @@ describe('actualización de metas de ahorro', () => {
     })
 
     expect(status).toBe(200)
-    expect(body).toMatchObject({
+    expect(getData(body)).toMatchObject({
       name: 'Nueva moto',
       targetAmount: 800000,
       savedAmount: 100000,
@@ -257,7 +269,7 @@ describe('eliminación de metas de ahorro', () => {
     const listed = await request('/api/goals', { token })
 
     expect(deleted.status).toBe(204)
-    expect(listed.body).toEqual([])
+    expect(getData(listed)).toEqual([])
   })
 
   it('responde 404 al eliminar una meta ajena', async () => {

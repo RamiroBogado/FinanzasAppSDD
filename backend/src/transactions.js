@@ -1,9 +1,52 @@
 import { getDatabase } from './db.js'
 
 const LIST_QUERY = 'SELECT * FROM transactions WHERE user_id = ?'
+const COUNT_QUERY = 'SELECT COUNT(*) as count FROM transactions WHERE user_id = ?'
 const ORDER_BY = ' ORDER BY date DESC, id DESC'
 
 export function listTransactions(userId, filters = {}) {
+  const { type, category, q, from, to, limit = 50, offset = 0 } = filters
+  const conditions = []
+  const params = [userId]
+
+  if (type) {
+    conditions.push('type = ?')
+    params.push(type)
+  }
+
+  if (category) {
+    conditions.push('lower(category) = lower(?)')
+    params.push(category)
+  }
+
+  if (q) {
+    conditions.push("lower(description) LIKE lower(?) ESCAPE '\\'")
+    params.push(`%${q.replace(/[\\%_]/g, (char) => `\\${char}`)}%`)
+  }
+
+  if (from) {
+    conditions.push('date >= ?')
+    params.push(from)
+  }
+
+  if (to) {
+    conditions.push('date <= ?')
+    params.push(to)
+  }
+
+  const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
+  const query = `${LIST_QUERY} ${whereClause}${ORDER_BY} LIMIT ? OFFSET ?`
+  const countQuery = `${COUNT_QUERY} ${whereClause}`
+
+  const countParams = params.slice(1) // remove userId for count
+  const total = getDatabase().prepare(countQuery).get(userId, ...countParams).count
+
+  const data = getDatabase().prepare(query).all(...params, Math.min(parseInt(limit) || 50, 200), parseInt(offset) || 0)
+
+  return { data, total, limit: Math.min(parseInt(limit) || 50, 200), offset: parseInt(offset) || 0 }
+}
+
+export function countTransactions(userId, filters = {}) {
   const { type, category, q, from, to } = filters
   const conditions = []
   const params = [userId]
@@ -33,12 +76,10 @@ export function listTransactions(userId, filters = {}) {
     params.push(to)
   }
 
-  const query =
-    conditions.length > 0
-      ? `${LIST_QUERY} AND ${conditions.join(' AND ')}${ORDER_BY}`
-      : `${LIST_QUERY}${ORDER_BY}`
+  const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
+  const countQuery = `${COUNT_QUERY} ${whereClause}`
 
-  return getDatabase().prepare(query).all(...params)
+  return getDatabase().prepare(countQuery).get(...params.slice(1)).count
 }
 
 export function findTransactionById(id, userId) {

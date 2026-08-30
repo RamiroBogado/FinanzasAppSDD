@@ -33,6 +33,17 @@ async function request(path, { method = 'GET', body, token } = {}) {
   return { status: response.status, body: response.status === 204 ? null : await response.json() }
 }
 
+function getData(response) {
+  if (!response) return response
+  if (response.body && response.body.data !== undefined) {
+    return response.body.data
+  }
+  if (response.data !== undefined) {
+    return response.data
+  }
+  return response
+}
+
 async function registerAndLogin({ username = 'rama', email = 'rama@example.com' } = {}) {
   await request('/api/auth/register', {
     method: 'POST',
@@ -199,8 +210,8 @@ describe('listado de alertas', () => {
     const { status, body } = await request('/api/alerts', { token })
 
     expect(status).toBe(200)
-    expect(body).toHaveLength(2)
-    expect(Date.parse(body[0].createdAt)).toBeGreaterThanOrEqual(Date.parse(body[1].createdAt))
+    expect(getData(body)).toHaveLength(2)
+    expect(Date.parse(getData(body)[0].createdAt)).toBeGreaterThanOrEqual(Date.parse(getData(body)[1].createdAt))
   })
 })
 
@@ -209,16 +220,16 @@ describe('control de lectura de alertas', () => {
     const token = await registerAndLogin()
     await createBudget(token, { amount: 100000 })
     await createExpense(token, 'Comida', 90000)
-    const { body } = await checkAlerts(token, MONTH)
+    const { body: alertBody } = await checkAlerts(token, MONTH)
 
-    const { status } = await request(`/api/alerts/${body.created[0].id}/read`, {
+    const { status } = await request(`/api/alerts/${alertBody.created[0].id}/read`, {
       method: 'PUT',
       token
     })
     const { body: after } = await request('/api/alerts', { token })
 
     expect(status).toBe(200)
-    expect(after[0].read).toBe(true)
+    expect(getData(after)[0].read).toBe(true)
   })
 
   it('marca todas las alertas como leídas', async () => {
@@ -233,8 +244,8 @@ describe('control de lectura de alertas', () => {
     const { body: after } = await request('/api/alerts', { token })
 
     expect(status).toBe(200)
-    expect(after).toHaveLength(2)
-    expect(after.every((alert) => alert.read)).toBe(true)
+    expect(getData(after)).toHaveLength(2)
+    expect(getData(after).every((alert) => alert.read)).toBe(true)
   })
 
   it('responde 404 ante una alerta ajena o inexistente', async () => {

@@ -118,14 +118,6 @@ La interfaz protegida DEBE permitir al usuario autenticado gestionar sus presupu
 - **WHEN** el usuario autenticado presiona `Agregar presupuesto`, completa el modal con categoría `Comida`, mes, monto y umbral y presiona `Agregar presupuesto`
 - **THEN** el presupuesto aparece en el listado del período con su límite y umbral en formato correspondiente y el modal se cierra
 
-#### Scenario: Apertura del modal de presupuesto
-- **WHEN** el usuario autenticado presiona `Agregar presupuesto`
-- **THEN** el sistema abre un modal centrado con fondo difuminado y el formulario de presupuesto
-
-#### Scenario: Cierre del modal de presupuesto por Cancelar
-- **WHEN** el usuario tiene el modal de presupuesto abierto y presiona `Cancelar`
-- **THEN** el sistema cierra el modal sin crear ni modificar ningún presupuesto
-
 #### Scenario: Progreso del mes
 - **WHEN** el usuario autenticado visualiza sus presupuestos del período seleccionado y tiene gastos en alguna categoría
 - **THEN** el sistema muestra el total gastado de cada categoría junto al límite con formato ARS y el progreso correspondiente
@@ -153,6 +145,14 @@ La interfaz protegida DEBE permitir al usuario autenticado gestionar sus presupu
 #### Scenario: Mes sin presupuestos
 - **WHEN** el usuario autenticado selecciona un período sin presupuestos
 - **THEN** el sistema muestra un mensaje de vacío en español
+
+#### Scenario: Apertura del modal de presupuesto
+- **WHEN** el usuario autenticado presiona `Agregar presupuesto`
+- **THEN** el sistema abre un modal centrado con fondo difuminado y el formulario de presupuesto
+
+#### Scenario: Cierre del modal de presupuesto por Cancelar
+- **WHEN** el usuario tiene el modal de presupuesto abierto y presiona `Cancelar`
+- **THEN** el sistema cierra el modal sin crear ni modificar ningún presupuesto
 
 ### Requirement: Validación de categoría existente
 Al crear o actualizar un presupuesto mediante `POST /api/budgets` o `PUT /api/budgets/:id`, si la petición incluye el campo opcional `category` (string no vacío), el sistema DEBE verificar que exista una categoría con ese nombre exacto (case-insensitive) en el catálogo del usuario autenticado (`categories.name` donde `categories.user_id = current_user.id` y `categories.type = 'expense'` — los presupuestos solo aplican a gastos). Si no existe o no es de tipo gasto, DEBE responder 400 con mensaje "La categoría no existe en tu catálogo o no es de tipo gasto". Si existe y es tipo `expense`, DEBE proceder normalmente. El campo `category` sigue siendo opcional; si se omite o es string vacío, el presupuesto aplica a todos los gastos (comportamiento actual).

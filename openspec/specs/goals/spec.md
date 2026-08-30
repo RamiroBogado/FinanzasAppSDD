@@ -63,6 +63,10 @@ La interfaz protegida DEBE ofrecer la gestión de metas accesible desde la barra
 - **WHEN** el usuario autenticado presiona `Agregar meta`, completa el modal con nombre y monto objetivo y presiona `Agregar meta`
 - **THEN** el sistema muestra la meta en el listado con su progreso, cierra el modal y muestra el toast `Meta creada`
 
+#### Scenario: Eliminación confirmada desde la interfaz
+- **WHEN** el usuario autenticado confirma `Eliminar` en el diálogo `¿Eliminar esta meta?`
+- **THEN** el sistema elimina la meta, actualiza el listado y muestra el toast `Meta eliminada`
+
 #### Scenario: Apertura del modal de meta
 - **WHEN** el usuario autenticado presiona `Agregar meta`
 - **THEN** el sistema abre un modal centrado con fondo difuminado y el formulario de meta
@@ -74,10 +78,6 @@ La interfaz protegida DEBE ofrecer la gestión de metas accesible desde la barra
 #### Scenario: Edición de meta en modal
 - **WHEN** el usuario autenticado presiona `Editar` sobre una meta existente
 - **THEN** el sistema abre el modal con los datos precargados y el título `Editar meta` y el fondo difuminado
-
-#### Scenario: Eliminación confirmada desde la interfaz
-- **WHEN** el usuario autenticado confirma `Eliminar` en el diálogo `¿Eliminar esta meta?`
-- **THEN** el sistema elimina la meta, actualiza el listado y muestra el toast `Meta eliminada`
 
 ### Requirement: Aportes y retiros sobre metas
 La interfaz DEBE permitir registrar aportes y retiros sobre una meta propia mediante diálogos con ingreso de monto. Un aporte DEBE sumar al monto ahorrado; un retiro DEBE restar SIN dejar el ahorrado por debajo de cero, rechazando con mensaje en español un retiro mayor al ahorrado. Ambas operaciones DEBEN persistirse mediante la actualización de la meta e informarse con los toasts `Aporte registrado` y `Retiro registrado`.

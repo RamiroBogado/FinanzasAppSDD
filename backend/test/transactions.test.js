@@ -28,7 +28,19 @@ async function request(path, { method = 'GET', body, token } = {}) {
     body: body ? JSON.stringify(body) : undefined
   })
 
-  return { status: response.status, body: response.status === 204 ? null : await response.json() }
+  const responseBody = response.status === 204 ? null : await response.json()
+  return { status: response.status, body: responseBody }
+}
+
+function getData(response) {
+  if (!response) return response
+  if (response.body && response.body.data !== undefined) {
+    return response.body.data
+  }
+  if (response.data !== undefined) {
+    return response.data
+  }
+  return response
 }
 
 async function registerAndLogin({ username = 'rama', email = 'rama@example.com' } = {}) {
@@ -87,7 +99,7 @@ describe('creación de transacciones', () => {
     const { status, body } = await createTransaction(token)
 
     expect(status).toBe(201)
-    expect(body).toMatchObject({
+    expect(getData(body)).toMatchObject({
       type: 'expense',
       amount: 12500,
       date: '2026-08-20',
@@ -164,16 +176,16 @@ describe('creación de transacciones', () => {
 })
 
 describe('listado de transacciones', () => {
-  it('ordena por fecha descendente', async () => {
+it('ordena por fecha descendente', async () => {
     const token = await registerAndLogin()
     await createTransaction(token, { date: '2026-08-18' })
     await createTransaction(token, { date: '2026-08-21', type: 'income' })
     await createTransaction(token, { date: '2026-08-19' })
 
-    const { status, body } = await request('/api/transactions', { token })
+    const response = await request('/api/transactions', { token })
 
-    expect(status).toBe(200)
-    expect(body.map((transaction) => transaction.date)).toEqual([
+    expect(response.status).toBe(200)
+    expect(getData(response.body).map((transaction) => transaction.date)).toEqual([
       '2026-08-21',
       '2026-08-19',
       '2026-08-18'
@@ -185,10 +197,11 @@ describe('listado de transacciones', () => {
     await createTransaction(token, { type: 'expense' })
     await createTransaction(token, { type: 'income', amount: 50000 })
 
-    const { body } = await request('/api/transactions?type=expense', { token })
+    const response = await request('/api/transactions?type=expense', { token })
 
-    expect(body).toHaveLength(1)
-    expect(body[0].type).toBe('expense')
+    expect(response.status).toBe(200)
+    expect(getData(response.body)).toHaveLength(1)
+    expect(getData(response.body)[0].type).toBe('expense')
   })
 
   it('rechaza un filtro de tipo inválido', async () => {
@@ -203,10 +216,10 @@ describe('listado de transacciones', () => {
     const tokenB = await registerAndLogin({ username: 'otro', email: 'otro@example.com' })
     await createTransaction(tokenA)
 
-    const { status, body } = await request('/api/transactions', { token: tokenB })
+    const response = await request('/api/transactions', { token: tokenB })
 
-    expect(status).toBe(200)
-    expect(body).toEqual([])
+    expect(response.status).toBe(200)
+    expect(getData(response.body)).toEqual([])
   })
 })
 
@@ -217,10 +230,11 @@ describe('filtros del listado', () => {
     await createTransaction(token, { category: 'Transporte', description: 'Sube' })
     await createTransaction(token, { type: 'income', amount: 50000, category: 'Sueldo' })
 
-    const { body } = await request('/api/transactions?category=comida', { token })
+    const response = await request('/api/transactions?category=comida', { token })
 
-    expect(body).toHaveLength(1)
-    expect(body[0].category).toBe('Comida')
+    expect(response.status).toBe(200)
+    expect(getData(response.body)).toHaveLength(1)
+    expect(getData(response.body)[0].category).toBe('Comida')
   })
 
   it('filtra por texto parcial en la descripción sin distinguir mayúsculas', async () => {
@@ -228,9 +242,10 @@ describe('filtros del listado', () => {
     await createTransaction(token, { description: 'Supermercado' })
     await createTransaction(token, { description: 'Mercado Libre' })
 
-    const { body } = await request('/api/transactions?q=mercado', { token })
+    const response = await request('/api/transactions?q=mercado', { token })
 
-    expect(body).toHaveLength(2)
+    expect(response.status).toBe(200)
+    expect(getData(response.body)).toHaveLength(2)
   })
 
   it('trata los comodines de LIKE como texto literal', async () => {
@@ -238,9 +253,10 @@ describe('filtros del listado', () => {
     await createTransaction(token, { description: 'Suscripción 100% gratis' })
     await createTransaction(token, { description: 'Pago completo' })
 
-    const { body } = await request('/api/transactions?q=100%25', { token })
+    const response = await request('/api/transactions?q=100%25', { token })
 
-    expect(body).toHaveLength(1)
+    expect(response.status).toBe(200)
+    expect(getData(response.body)).toHaveLength(1)
   })
 
   it('filtra por rango de fechas inclusivo', async () => {
@@ -249,9 +265,10 @@ describe('filtros del listado', () => {
     await createTransaction(token, { date: '2026-08-15' })
     await createTransaction(token, { date: '2026-08-20' })
 
-    const { body } = await request('/api/transactions?from=2026-08-01&to=2026-08-15', { token })
+    const response = await request('/api/transactions?from=2026-08-01&to=2026-08-15', { token })
 
-    expect(body).toHaveLength(2)
+    expect(response.status).toBe(200)
+    expect(getData(response.body)).toHaveLength(2)
   })
 
   it('rechaza fechas inválidas en from y to', async () => {
@@ -289,8 +306,8 @@ describe('filtros del listado', () => {
       { token }
     )
 
-    expect(body).toHaveLength(1)
-    expect(body[0].description).toBe('Supermercado')
+    expect(getData(body)).toHaveLength(1)
+    expect(getData(body)[0].description).toBe('Supermercado')
   })
 
   it('los filtros no cruzan datos entre usuarios', async () => {
@@ -301,8 +318,8 @@ describe('filtros del listado', () => {
 
     const { body } = await request('/api/transactions?category=comida', { token: tokenB })
 
-    expect(body).toHaveLength(1)
-    expect(body[0].description).toBe('Verdulería')
+    expect(getData(body)).toHaveLength(1)
+    expect(getData(body)[0].description).toBe('Verdulería')
   })
 })
 
@@ -314,7 +331,7 @@ describe('consulta de una transacción', () => {
     const { status, body } = await request(`/api/transactions/${created.id}`, { token })
 
     expect(status).toBe(200)
-    expect(body).toMatchObject({ id: created.id, amount: 12500 })
+    expect(getData(body)).toMatchObject({ id: created.id, amount: 12500 })
   })
 
   it('responde 404 ante una transacción de otro usuario', async () => {
@@ -350,7 +367,7 @@ describe('actualización de transacciones', () => {
     })
 
     expect(status).toBe(200)
-    expect(body).toMatchObject({ id: created.id, type: 'income', amount: 80000, date: '2026-08-22' })
+    expect(getData(body)).toMatchObject({ id: created.id, type: 'income', amount: 80000, date: '2026-08-22' })
   })
 
   it('modifica la categoría de una transacción propia', async () => {
@@ -408,7 +425,7 @@ describe('eliminación de transacciones', () => {
     const { body: after } = await request('/api/transactions', { token })
 
     expect(status).toBe(204)
-    expect(after).toEqual([])
+    expect(getData(after)).toEqual([])
   })
 
   it('responde 404 al eliminar una transacción ajena', async () => {

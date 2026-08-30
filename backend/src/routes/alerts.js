@@ -44,7 +44,7 @@ router.post('/check', (req, res) => {
   const db = getDatabase()
   const budgets = db
     .prepare(LIST_BUDGETS_QUERY)
-    .all(req.userId, month)
+    .all(monthStart(month), monthEnd(month), req.userId, month)
   const created = []
 
   for (const budget of budgets) {
@@ -72,11 +72,39 @@ router.put('/:id/read', (req, res) => {
   res.json({ message: 'Alerta marcada como leída' })
 })
 
+router.get('/', (req, res) => {
+  const { limit = 50, offset = 0 } = req.query
+  const lim = Math.min(parseInt(limit) || 50, 200)
+  const off = parseInt(offset) || 0
+
+  const alerts = getDatabase()
+    .prepare('SELECT * FROM alerts WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
+    .all(req.userId, lim, off)
+
+  const total = getDatabase()
+    .prepare('SELECT COUNT(*) as count FROM alerts WHERE user_id = ?')
+    .get(req.userId).count
+
+  res.json({ data: alerts.map(toPublicAlert), total, limit: lim, offset: off })
+})
+
+router.put('/:id/read', (req, res) => {
+  const result = getDatabase()
+    .prepare('UPDATE alerts SET read = 1 WHERE id = ? AND user_id = ?')
+    .run(req.params.id, req.userId)
+
+  if (result.changes === 0) {
+    return res.status(404).json({ error: 'Alerta no encontrada' })
+  }
+
+  res.json({ message: 'Alerta marcada como leída' })
+})
+
 const LIST_BUDGETS_QUERY = `
 SELECT b.*,
   (SELECT COALESCE(SUM(t.amount), 0) FROM transactions t
    WHERE t.user_id = b.user_id AND t.type = 'expense'
-     AND t.date >= b.month || '-01' AND t.date <= b.month || '-31'
+     AND t.date >= ? AND t.date <= ?
      AND lower(t.category) = lower(b.category)) AS spent
 FROM budgets b WHERE b.user_id = ? AND b.month = ?
 `
@@ -84,6 +112,16 @@ FROM budgets b WHERE b.user_id = ? AND b.month = ?
 function currentMonth() {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function monthStart(month) {
+  return `${month}-01`
+}
+
+function monthEnd(month) {
+  // Último día real del mes
+  const [year, m] = month.split('-').map(Number)
+  return new Date(year, m, 0).toISOString().slice(0, 10)
 }
 
 function createAlertIfMissing(db, userId, budget, month, type, percentage) {

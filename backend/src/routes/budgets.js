@@ -1,4 +1,4 @@
-import { Router } from 'express'
+﻿import { Router } from 'express'
 import { requireAuth } from '../middleware/requireAuth.js'
 import {
   createBudget,
@@ -81,18 +81,25 @@ router.post('/', (req, res) => {
 })
 
 router.get('/', (req, res) => {
-  const { month, category } = req.query
+  const { month, category, limit, offset } = req.query
 
   if (month !== undefined && (typeof month !== 'string' || !MONTH_PATTERN.test(month))) {
     return res.status(400).json({ error: 'El mes debe tener formato AAAA-MM' })
   }
 
+  const lim = Math.min(parseInt(limit) || 50, 200)
+  if (lim > 200) {
+    return res.status(400).json({ error: 'El límite máximo es 200' })
+  }
+
   const budgets = listBudgets(req.userId, {
     month: typeof month === 'string' ? month : undefined,
-    category: typeof category === 'string' ? category : undefined
+    category: typeof category === 'string' ? category : undefined,
+    limit: Math.min(parseInt(limit) || 50, 200),
+    offset: parseInt(offset) || 0
   })
 
-  res.json(budgets.map(toPublicBudget))
+  res.json(budgets)
 })
 
 router.get('/:id', (req, res) => {

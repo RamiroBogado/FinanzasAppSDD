@@ -82,6 +82,17 @@ async function request(path, { method = 'GET', body, token } = {}) {
   return { status: response.status, body: parsed }
 }
 
+function getData(response) {
+  if (!response) return response
+  if (response.body && response.body.data !== undefined) {
+    return response.body.data
+  }
+  if (response.data !== undefined) {
+    return response.data
+  }
+  return response
+}
+
 async function registerAndLogin({ username, email }) {
   await request('/api/auth/register', {
     method: 'POST',
@@ -103,7 +114,7 @@ describe('autenticación de la API de chat', () => {
     const { status, body } = await request(path, { method, body: { message: 'Hola' } })
 
     expect(status).toBe(401)
-    expect(body).toEqual({ error: 'No autorizado' })
+    expect(getData(body)).toEqual({ error: 'No autorizado' })
     expect(aiCalls).toHaveLength(0)
   })
 })
@@ -342,9 +353,9 @@ describe('aislamiento y limpieza del historial', () => {
     })
 
     const history = await request('/api/chat/messages', { token })
-    const roles = history.body.map((message) => message.role)
+    const roles = getData(history.body).map((message) => message.role)
 
     expect(roles).toEqual(['user', 'assistant', 'user', 'assistant'])
-    expect(history.body.map((message) => message.content)).toContain('Pregunta dos')
+    expect(getData(history.body).map((message) => message.content)).toContain('Pregunta dos')
   })
 })

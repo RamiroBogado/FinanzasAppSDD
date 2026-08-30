@@ -31,6 +31,17 @@ async function request(path, { method = 'GET', body, token } = {}) {
   return { status: response.status, body: await response.json() }
 }
 
+function getData(response) {
+  if (!response) return response
+  if (response.body && response.body.data !== undefined) {
+    return response.body.data
+  }
+  if (response.data !== undefined) {
+    return response.data
+  }
+  return response
+}
+
 async function registerUser({ username = 'rama', email = 'rama@example.com', password = 'secret123' } = {}) {
   return request('/api/auth/register', { method: 'POST', body: { username, email, password } })
 }
@@ -40,7 +51,7 @@ describe('registro', () => {
     const { status, body } = await registerUser()
 
     expect(status).toBe(201)
-    expect(body).toMatchObject({ username: 'rama', email: 'rama@example.com' })
+    expect(getData(body)).toMatchObject({ username: 'rama', email: 'rama@example.com' })
     expect(body).not.toHaveProperty('token')
 
     const stored = getDatabase().prepare('SELECT * FROM users WHERE username = ?').get('rama')
@@ -150,7 +161,7 @@ describe('me', () => {
     const { status, body } = await request('/api/auth/me', { token: loginBody.token })
 
     expect(status).toBe(200)
-    expect(body).toMatchObject({ username: 'rama', email: 'rama@example.com' })
+    expect(getData(body)).toMatchObject({ username: 'rama', email: 'rama@example.com' })
   })
 
   it('rechaza la solicitud sin token', async () => {

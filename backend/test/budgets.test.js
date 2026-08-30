@@ -29,8 +29,16 @@ async function request(path, { method = 'GET', body, token } = {}) {
     body: body ? JSON.stringify(body) : undefined
   })
 
-  return { status: response.status, body: response.status === 204 ? null : await response.json() }
+  const responseBody = response.status === 204 ? null : await response.json()
+  return { status: response.status, body: responseBody }
 }
+
+function getData(response) {
+  if (!response || !response.body) return response
+  return response.body.data ?? response.body
+}
+
+
 
 async function registerAndLogin({ username = 'rama', email = 'rama@example.com' } = {}) {
   await request('/api/auth/register', {
@@ -89,7 +97,7 @@ describe('creación de presupuestos', () => {
     const { status, body } = await createBudget(token)
 
     expect(status).toBe(201)
-    expect(body).toMatchObject({ category: 'Comida', month: '2026-08', amount: 100000 })
+    expect(getData(body)).toMatchObject({ category: 'Comida', month: '2026-08', amount: 100000 })
     expect(body.spent).toBe(0)
     expect(typeof body.id).toBe('number')
   })
@@ -179,10 +187,10 @@ describe('listado de presupuestos', () => {
     const tokenB = await registerAndLogin({ username: 'otro', email: 'otro@example.com' })
     await createBudget(tokenA)
 
-    const { status, body } = await request('/api/budgets', { token: tokenB })
+    const response = await request('/api/budgets', { token: tokenB })
 
-    expect(status).toBe(200)
-    expect(body).toEqual([])
+    expect(response.status).toBe(200)
+    expect(getData(response)).toEqual([])
   })
 
   it('filtra por mes y por categoría', async () => {
@@ -194,9 +202,9 @@ describe('listado de presupuestos', () => {
     const byMonth = await request('/api/budgets?month=2026-08', { token })
     const byCategory = await request('/api/budgets?category=transporte', { token })
 
-    expect(byMonth.body).toHaveLength(2)
-    expect(byCategory.body).toHaveLength(1)
-    expect(byCategory.body[0].category).toBe('Transporte')
+    expect(getData(byMonth)).toHaveLength(2)
+    expect(getData(byCategory)).toHaveLength(1)
+    expect(getData(byCategory)[0].category).toBe('Transporte')
   })
 
   it('rechaza un mes inválido en el filtro', async () => {
@@ -220,19 +228,19 @@ describe('listado de presupuestos', () => {
       token
     })
 
-    const { body } = await request('/api/budgets', { token })
+    const response = await request('/api/budgets', { token })
 
-    expect(body).toHaveLength(1)
-    expect(body[0].spent).toBe(5000)
+    expect(getData(response)).toHaveLength(1)
+    expect(getData(response)[0].spent).toBe(5000)
   })
 
   it('incluye el umbral configurado en el listado', async () => {
     const token = await registerAndLogin()
     await createBudget(token, { threshold: 60 })
 
-    const { body } = await request('/api/budgets', { token })
+    const response = await request('/api/budgets', { token })
 
-    expect(body[0].threshold).toBe(60)
+    expect(getData(response)[0].threshold).toBe(60)
   })
 
   it('el gastado no cruza datos entre usuarios', async () => {
@@ -241,9 +249,9 @@ describe('listado de presupuestos', () => {
     await createBudget(tokenA, { category: 'Comida', month: '2026-08' })
     await createExpense(tokenB, 'Comida', 9999, '2026-08-10')
 
-    const { body } = await request('/api/budgets', { token: tokenA })
+    const response = await request('/api/budgets', { token: tokenA })
 
-    expect(body[0].spent).toBe(0)
+    expect(getData(response)[0].spent).toBe(0)
   })
 })
 
@@ -256,7 +264,7 @@ describe('consulta de un presupuesto', () => {
     const { status, body } = await request(`/api/budgets/${created.id}`, { token })
 
     expect(status).toBe(200)
-    expect(body).toMatchObject({ id: created.id, amount: 100000, spent: 2500 })
+    expect(getData(body)).toMatchObject({ id: created.id, amount: 100000, spent: 2500 })
   })
 
   it('responde 404 ante un presupuesto ajeno o inexistente', async () => {
@@ -285,7 +293,7 @@ describe('actualización de presupuestos', () => {
     })
 
     expect(status).toBe(200)
-    expect(body).toMatchObject({ id: created.id, amount: 150000 })
+    expect(getData(body)).toMatchObject({ id: created.id, amount: 150000 })
   })
 
   it('conserva el umbral existente al editar sin enviarlo', async () => {
@@ -367,10 +375,10 @@ describe('eliminación de presupuestos', () => {
     const { body: created } = await createBudget(token)
 
     const { status } = await request(`/api/budgets/${created.id}`, { method: 'DELETE', token })
-    const { body: after } = await request('/api/budgets', { token })
+    const response = await request('/api/budgets', { token })
 
     expect(status).toBe(204)
-    expect(after).toEqual([])
+    expect(getData(response.body).data).toEqual([])
   })
 
   it('responde 404 al eliminar un presupuesto ajeno o inexistente', async () => {

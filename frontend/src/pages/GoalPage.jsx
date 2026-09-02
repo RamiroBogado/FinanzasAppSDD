@@ -127,23 +127,17 @@ const GoalPage = () => {
     }
   }
 
-  const applyMovement = async (goal, delta) => {
-    const savedAmount = Math.max(0, goal.savedAmount + delta)
-
+  const applyMovement = async (goal, delta, movementType) => {
     try {
-      await api.updateGoal(token, goal.id, {
-        name: goal.name,
-        targetAmount: goal.targetAmount,
-        savedAmount,
-        deadline: goal.deadline
-      })
-
-      if (delta > 0) {
-        toast.showSuccess(savedAmount >= goal.targetAmount ? '¡Meta cumplida!' : 'Aporte registrado')
+      const updatedGoal = await api.adjustGoal(token, goal.id, movementType, delta)
+      
+      setGoals(goals.map(g => g.id === goal.id ? updatedGoal : g))
+      
+      if (movementType === 'contribute') {
+        toast.showSuccess(updatedGoal.savedAmount >= updatedGoal.targetAmount ? '¡Meta cumplida!' : 'Aporte registrado')
       } else {
         toast.showSuccess('Retiro registrado')
       }
-      refresh()
     } catch (err) {
       toast.showError(err.message)
     }
@@ -152,14 +146,14 @@ const GoalPage = () => {
   const handleContribute = async (cents) => {
     if (!contributingGoal) return
 
-    await applyMovement(contributingGoal, cents)
+    await applyMovement(contributingGoal, cents, 'contribute')
     setContributingGoal(null)
   }
 
   const handleWithdraw = async (cents) => {
     if (!withdrawingGoal) return
 
-    await applyMovement(withdrawingGoal, -cents)
+    await applyMovement(withdrawingGoal, cents, 'withdraw')
     setWithdrawingGoal(null)
   }
 

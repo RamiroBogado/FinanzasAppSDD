@@ -188,6 +188,13 @@ export const api = {
       token
     }),
 
+  adjustGoal: (token, goalId, type, amount) =>
+    request(`/goals/${goalId}/movement`, {
+      method: 'POST',
+      body: { type, amount },
+      token
+    }),
+
   // =========================================================
   // ALERTS
   // =========================================================
@@ -306,6 +313,18 @@ export const api = {
   clearChatMessages: (token) =>
     request('/chat/messages', {
       method: 'DELETE',
+      token
+    }),
+
+  confirmChatAction: (token, id) =>
+    request(`/chat/actions/${id}/confirm`, {
+      method: 'POST',
+      token
+    }),
+
+  cancelChatAction: (token, id) =>
+    request(`/chat/actions/${id}/cancel`, {
+      method: 'POST',
       token
     }),
 

@@ -13,6 +13,7 @@ const ChatWidget = ({ open, onClose }) => {
   const [sending, setSending] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
+  const [action, setAction] = useState(null)
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -75,10 +76,38 @@ const ChatWidget = ({ open, onClose }) => {
         ...current,
         { role: 'assistant', content: data.reply || 'No pude generar una respuesta.' }
       ])
+      setAction(data.action || null)
     } catch (err) {
       toast.showError(err.message)
     } finally {
       setSending(false)
+    }
+  }
+
+  const confirmAction = async () => {
+    if (!action || sending) return
+    setSending(true)
+    try {
+      const response = await api.confirmChatAction(getToken(), action.id)
+      const result = response.request?.result
+      setMessages((current) => [...current, { role: 'assistant', content: result?.message || 'Acción realizada.' }])
+      if (result?.download) await api.exportTransactions(getToken(), result.download.params, result.download.format)
+      setAction(null)
+    } catch (err) {
+      toast.showError(err.message)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const cancelAction = async () => {
+    if (!action || sending) return
+    try {
+      await api.cancelChatAction(getToken(), action.id)
+      setMessages((current) => [...current, { role: 'assistant', content: 'Acción cancelada.' }])
+      setAction(null)
+    } catch (err) {
+      toast.showError(err.message)
     }
   }
 
@@ -152,6 +181,15 @@ const ChatWidget = ({ open, onClose }) => {
             <p className="rounded-xl bg-slate-100 px-3 py-2 text-sm italic text-[#64748B] dark:bg-slate-800 dark:text-slate-400">
               Pensando…
             </p>
+          </div>
+        )}
+        {action && (
+          <div className="rounded-xl border border-[#0e9f6e] bg-[#effcf6] p-3 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+            <p className="mb-3">{action.summary}</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={confirmAction} className="rounded-lg bg-[#0e9f6e] px-3 py-1.5 font-medium text-white">Confirmar</button>
+              <button type="button" onClick={cancelAction} className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium">Cancelar</button>
+            </div>
           </div>
         )}
       </div>

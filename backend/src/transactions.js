@@ -11,6 +11,13 @@ function getMissingMonths(from, to) {
   let [fromYear, fromMonth] = from.split('-').map(Number)
   const [toYear, toMonth] = to.split('-').map(Number)
   
+  // Empezar desde el mes SIGUIENTE al último procesado
+  fromMonth++
+  if (fromMonth > 12) {
+    fromMonth = 1
+    fromYear++
+  }
+  
   while (fromYear < toYear || (fromYear === toYear && fromMonth <= toMonth)) {
     months.push(`${fromYear}-${String(fromMonth).padStart(2, '0')}`)
     fromMonth++

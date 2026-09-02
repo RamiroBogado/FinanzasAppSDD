@@ -12,6 +12,7 @@ import {
   findUserByUsername,
   toPublicUser
 } from '../users.js'
+import { createRolloverIfNeeded } from '../transactions.js'
 
 const router = Router()
 
@@ -68,6 +69,8 @@ router.post('/login', async (req, res) => {
 })
 
 router.get('/me', requireAuth, (req, res) => {
+  createRolloverIfNeeded(req.userId)
+  
   const user = findUserById(req.userId)
 
   if (!user) {
@@ -200,6 +203,8 @@ router.post('/reset-password', async (req, res) => {
 })
 
 router.get('/me', requireAuth, (req, res) => {
+  createRolloverIfNeeded(req.userId)
+  
   const user = findUserById(req.userId)
 
   if (!user) {

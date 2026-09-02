@@ -6,7 +6,8 @@ import {
   findGoalById,
   listGoals,
   toPublicGoal,
-  updateGoal
+  updateGoal,
+  adjustGoalWithTransaction
 } from '../goals.js'
 
 const router = Router()
@@ -135,6 +136,26 @@ router.delete('/:id', (req, res) => {
   }
 
   res.status(204).end()
+})
+
+router.post('/:id/movement', (req, res) => {
+  const { type, amount } = req.body ?? {}
+  const goalId = parseInt(req.params.id)
+  
+  if (!['contribute', 'withdraw'].includes(type)) {
+    return res.status(400).json({ error: 'Tipo debe ser contribute o withdraw' })
+  }
+  if (!Number.isInteger(amount) || amount <= 0) {
+    return res.status(400).json({ error: 'Monto debe ser entero positivo (centavos)' })
+  }
+  
+  try {
+    const result = adjustGoalWithTransaction(req.userId, goalId, amount, type)
+    res.status(201).json(toPublicGoal(result.goal))
+  } catch (err) {
+    const status = err.status || 500
+    res.status(status).json({ error: err.message })
+  }
 })
 
 export default router

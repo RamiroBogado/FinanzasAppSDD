@@ -108,6 +108,46 @@ export function deleteGoal(id, userId) {
     .run(id, userId)
 }
 
+export function adjustGoalWithTransaction(userId, goalId, delta, movementType) {
+  const db = getDatabase()
+  
+  return db.transaction(() => {
+    const goal = db.prepare('SELECT * FROM goals WHERE id = ? AND user_id = ?').get(goalId, userId)
+    if (!goal) {
+      const err = new Error('Meta no encontrada')
+      err.status = 404
+      throw err
+    }
+    
+    if (movementType === 'withdraw' && goal.saved_amount < delta) {
+      const err = new Error('Fondos insuficientes en la meta')
+      err.status = 400
+      throw err
+    }
+    
+    const newSaved = movementType === 'contribute' 
+      ? goal.saved_amount + delta 
+      : goal.saved_amount - delta
+    db.prepare('UPDATE goals SET saved_amount = ? WHERE id = ?').run(newSaved, goalId)
+    
+    const txnType = movementType === 'contribute' ? 'expense' : 'income'
+    const description = movementType === 'contribute' 
+      ? `Aporte a meta: ${goal.name}`
+      : `Retiro de meta: ${goal.name}`
+    const today = new Date().toISOString().slice(0, 10)
+    
+    const result = db.prepare(`
+      INSERT INTO transactions (user_id, type, amount, date, description, category, goal_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, txnType, delta, today, description, null, goalId, today)
+    
+    return { 
+      goal: { ...goal, saved_amount: newSaved },
+      transactionId: result.lastInsertRowid
+    }
+  })()
+}
+
 export function toPublicGoal(goal) {
   return {
     id: Number(goal.id),

@@ -112,6 +112,39 @@ const CREATE_CHAT_MESSAGES_INDEX_SQL = `
 CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages (user_id, id)
 `
 
+const CREATE_CHAT_ACTION_REQUESTS_SQL = `
+CREATE TABLE IF NOT EXISTS chat_action_requests (
+  id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  action_type TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'confirmed', 'cancelled', 'expired')),
+  result TEXT,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  confirmed_at TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)
+`
+
+const CREATE_CHAT_ACTION_REQUESTS_INDEX_SQL = `
+CREATE INDEX IF NOT EXISTS idx_chat_action_requests_user_status ON chat_action_requests (user_id, status)
+`
+
+const CREATE_CHAT_ACTION_AUDIT_SQL = `
+CREATE TABLE IF NOT EXISTS chat_action_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  request_id TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  action_type TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (request_id) REFERENCES chat_action_requests(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)
+`
+
 const CREATE_PASSWORD_RESET_TOKENS_SQL = `
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -121,6 +154,14 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   expires_at TEXT NOT NULL,
   created_at TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)
+`
+
+const CREATE_ROLLOVER_TRACKING_SQL = `
+CREATE TABLE IF NOT EXISTS rollover_tracking (
+  user_id INTEGER PRIMARY KEY,
+  last_processed_month TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
 )
 `
 
@@ -140,7 +181,8 @@ const TRANSACTIONS_ALTERS = {
   date: "TEXT NOT NULL DEFAULT ''",
   description: 'TEXT',
   category: 'TEXT',
-  created_at: "TEXT NOT NULL DEFAULT ''"
+  created_at: "TEXT NOT NULL DEFAULT ''",
+  goal_id: 'INTEGER'
 }
 
 const BUDGETS_ALTERS = {
@@ -170,7 +212,6 @@ function ensureTable(db, tableName, createSql, columnAlters) {
 
   if (!exists) {
     db.exec(createSql)
-    return
   }
 
   const columns = db.prepare(`PRAGMA table_info(${tableName})`).all().map((column) => column.name)
@@ -191,15 +232,21 @@ export function initSchema(db) {
   ensureTable(db, 'goals', CREATE_GOALS_SQL, GOALS_ALTERS)
   ensureTable(db, 'alerts', CREATE_ALERTS_SQL, {})
   ensureTable(db, 'chat_messages', CREATE_CHAT_MESSAGES_SQL, {})
+  ensureTable(db, 'chat_action_requests', CREATE_CHAT_ACTION_REQUESTS_SQL, {})
+  ensureTable(db, 'chat_action_audit', CREATE_CHAT_ACTION_AUDIT_SQL, {})
   ensureTable(db, 'categories', CREATE_CATEGORIES_SQL, CATEGORIES_ALTERS)
   ensureTable(db, 'password_reset_tokens', CREATE_PASSWORD_RESET_TOKENS_SQL, PASSWORD_RESET_TOKENS_ALTERS)
+  ensureTable(db, 'rollover_tracking', CREATE_ROLLOVER_TRACKING_SQL, {})
   db.exec(CREATE_TRANSACTIONS_INDEX_SQL)
   db.exec(CREATE_BUDGETS_INDEX_SQL)
   db.exec(CREATE_GOALS_INDEX_SQL)
   db.exec(CREATE_ALERTS_INDEX_SQL)
   db.exec(CREATE_CHAT_MESSAGES_INDEX_SQL)
+  db.exec(CREATE_CHAT_ACTION_REQUESTS_INDEX_SQL)
   db.exec(CREATE_CATEGORIES_INDEX_SQL)
   db.exec(CREATE_PASSWORD_RESET_TOKENS_INDEX_SQL)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_user_month ON transactions (user_id, date)`)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_transactions_goal ON transactions (goal_id)`)
 }
 
 const PALETTE = [

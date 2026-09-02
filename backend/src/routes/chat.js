@@ -7,6 +7,11 @@ import {
   saveChatTurn
 } from '../chat.js'
 import { requireAuth } from '../middleware/requireAuth.js'
+import {
+  cancelActionRequest,
+  confirmActionRequest,
+  createActionRequest
+} from '../chatActions.js'
 
 const router = Router()
 
@@ -76,6 +81,7 @@ router.post('/messages', async (req, res) => {
     return res.status(502).json({ error: 'El asistente no está disponible en este momento' })
   }
 
+  const action = createActionRequest({ userId: req.userId, action: data.action })
   saveChatTurn({ userId: req.userId, message, reply: data.reply })
 
   console.log(JSON.stringify({
@@ -85,7 +91,25 @@ router.post('/messages', async (req, res) => {
     status: 'ok'
   }))
 
-  return res.json({ reply: data.reply })
+  return res.json({ reply: data.reply, action })
+})
+
+router.post('/actions/:id/confirm', (req, res) => {
+  try {
+    const result = confirmActionRequest(req.params.id, req.userId)
+    if (result.error === 'not_found') return res.status(404).json({ error: 'Acción no encontrada' })
+    if (result.error === 'unavailable') return res.status(409).json({ error: 'La acción ya no está disponible' })
+    return res.json(result)
+  } catch (error) {
+    return res.status(400).json({ error: error.message || 'No se pudo ejecutar la acción' })
+  }
+})
+
+router.post('/actions/:id/cancel', (req, res) => {
+  if (!cancelActionRequest(req.params.id, req.userId)) {
+    return res.status(404).json({ error: 'Acción no encontrada o no disponible' })
+  }
+  return res.json({ status: 'cancelled' })
 })
 
 router.delete('/messages', (req, res) => {

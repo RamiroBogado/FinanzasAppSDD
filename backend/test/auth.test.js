@@ -8,7 +8,18 @@ let server
 let baseUrl
 
 beforeEach(async () => {
-  getDatabase().prepare('DELETE FROM users').run()
+  const db = getDatabase()
+  db.prepare('DELETE FROM chat_action_audit').run()
+  db.prepare('DELETE FROM chat_action_requests').run()
+  db.prepare('DELETE FROM chat_messages').run()
+  db.prepare('DELETE FROM alerts').run()
+  db.prepare('DELETE FROM goals').run()
+  db.prepare('DELETE FROM budgets').run()
+  db.prepare('DELETE FROM categories').run()
+  db.prepare('DELETE FROM transactions').run()
+  db.prepare('DELETE FROM rollover_tracking').run()
+  db.prepare('DELETE FROM password_reset_tokens').run()
+  db.prepare('DELETE FROM users').run()
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
 })

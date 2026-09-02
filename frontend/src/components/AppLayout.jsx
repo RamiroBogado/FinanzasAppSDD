@@ -37,7 +37,7 @@ const NAV_ITEMS = [
   { to: '/configuracion', label: 'Configuración', icon: Settings }
 ]
 
-const UnreadAlertsCount = ({ compact }) => {
+const UnreadAlertsCount = ({ compact = false }) => {
   const [unread, setUnread] = useState(0)
 
   useEffect(() => {
@@ -77,7 +77,9 @@ const UnreadAlertsCount = ({ compact }) => {
   return (
     <span
       className={`inline-flex items-center justify-center rounded-full bg-[#E11D48] font-semibold text-white ${
-        compact ? 'absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]' : 'ml-auto min-w-5 px-1.5 text-xs'
+        compact
+          ? 'absolute -right-1 -top-1 h-4 min-w-4 px-1 text-[10px]'
+          : 'ml-auto min-w-5 px-1.5 text-xs'
       }`}
     >
       {unread > 9 ? '9+' : unread}
@@ -89,14 +91,14 @@ UnreadAlertsCount.propTypes = {
   compact: PropTypes.bool
 }
 
-UnreadAlertsCount.defaultProps = {
-  compact: false
-}
-
 const navLinkClass = ({ isActive }, collapsed) =>
   `relative flex items-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] ${
     collapsed ? 'justify-center px-2 py-2' : 'gap-3 px-3 py-2.5'
-  } ${isActive ? 'bg-[#0e9f6e] text-white shadow-sm' : 'text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'}`
+  } ${
+    isActive
+      ? 'bg-[#0e9f6e] text-white shadow-sm'
+      : 'text-[#3d4a42] hover:bg-[#eff5ef] hover:text-[#171d19] dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+  }`
 
 const SidebarContent = ({ collapsed, onNavigate, onToggleCollapsed }) => {
   const { user, logout } = useAuth()
@@ -105,24 +107,43 @@ const SidebarContent = ({ collapsed, onNavigate, onToggleCollapsed }) => {
   return (
     <div className="flex h-full flex-col">
       <div>
-        <div className={`mb-6 flex items-center gap-3 ${collapsed ? 'justify-center' : 'px-1'}`}>
+        <div
+          className={`mb-6 flex items-center gap-3 ${
+            collapsed ? 'justify-center' : 'px-1'
+          }`}
+        >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0e9f6e] text-white">
             <Wallet size={20} aria-hidden="true" />
           </span>
+
           {!collapsed && (
             <div className="flex flex-col leading-none">
-              <span className="text-[20px] font-bold tracking-tight text-[#0e9f6e]">FINANZASAPP</span>
-              <span className="text-[12px] font-normal text-[#64748B]">control financiero</span>
+              <span className="text-[20px] font-bold tracking-tight text-[#0e9f6e]">
+                FINANZASAPP
+              </span>
+              <span className="text-[12px] font-normal text-[#64748B]">
+                control financiero
+              </span>
             </div>
           )}
         </div>
+
         <nav className="space-y-1">
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} title={collapsed ? label : undefined} className={(props) => navLinkClass(props, collapsed)} onClick={onNavigate}>
+            <NavLink
+              key={to}
+              to={to}
+              title={collapsed ? label : undefined}
+              className={(props) => navLinkClass(props, collapsed)}
+              onClick={onNavigate}
+            >
               <span className="relative">
                 <Icon size={18} aria-hidden="true" />
-                {to === '/alertas' && collapsed && <UnreadAlertsCount compact />}
+                {to === '/alertas' && collapsed && (
+                  <UnreadAlertsCount compact />
+                )}
               </span>
+
               {!collapsed && (
                 <>
                   {label}
@@ -132,6 +153,7 @@ const SidebarContent = ({ collapsed, onNavigate, onToggleCollapsed }) => {
             </NavLink>
           ))}
         </nav>
+
         {!collapsed && (
           <div className="mt-6 border-t border-[#E2E8F0] pt-4 dark:border-slate-800">
             <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-[#64748B] dark:text-slate-400">
@@ -141,19 +163,29 @@ const SidebarContent = ({ collapsed, onNavigate, onToggleCollapsed }) => {
           </div>
         )}
       </div>
+
       <div className="mt-auto space-y-2 pt-6">
         {!collapsed && (
-          <p className="px-1 text-sm text-[#3d4a42] dark:text-slate-300">{user?.username}</p>
+          <p className="px-1 text-sm text-[#3d4a42] dark:text-slate-300">
+            {user?.username}
+          </p>
         )}
+
         <button
           type="button"
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm font-medium text-[#3d4a42] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
         >
-          {theme === 'dark' ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+          {theme === 'dark' ? (
+            <Sun size={16} aria-hidden="true" />
+          ) : (
+            <Moon size={16} aria-hidden="true" />
+          )}
+
           {!collapsed && (theme === 'dark' ? 'Modo claro' : 'Modo oscuro')}
         </button>
+
         <button
           type="button"
           onClick={logout}
@@ -162,13 +194,19 @@ const SidebarContent = ({ collapsed, onNavigate, onToggleCollapsed }) => {
           <LogOut size={16} aria-hidden="true" />
           {!collapsed && 'Cerrar sesión'}
         </button>
+
         <button
           type="button"
           onClick={onToggleCollapsed}
           title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
           className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium text-[#64748B] transition-colors hover:bg-[#eff5ef] hover:text-[#171d19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0e9f6e] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
         >
-          {collapsed ? <PanelLeftOpen size={14} aria-hidden="true" /> : <PanelLeftClose size={14} aria-hidden="true" />}
+          {collapsed ? (
+            <PanelLeftOpen size={14} aria-hidden="true" />
+          ) : (
+            <PanelLeftClose size={14} aria-hidden="true" />
+          )}
+
           {!collapsed && 'Colapsar menú'}
         </button>
       </div>
@@ -203,7 +241,10 @@ const AppLayout = () => {
           collapsed ? 'w-[4.5rem]' : 'w-64'
         }`}
       >
-        <SidebarContent collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
+        <SidebarContent
+          collapsed={collapsed}
+          onToggleCollapsed={toggleCollapsed}
+        />
       </aside>
 
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#E2E8F0] bg-white/80 px-4 py-3 backdrop-blur md:hidden dark:border-slate-800 dark:bg-slate-900/80">
@@ -211,13 +252,20 @@ const AppLayout = () => {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0e9f6e] text-white">
             <Wallet size={18} aria-hidden="true" />
           </span>
+
           <div className="flex flex-col leading-none">
-            <span className="text-[16px] font-bold tracking-tight text-[#0e9f6e]">FINANZASAPP</span>
-            <span className="text-[10px] text-[#64748B]">control financiero</span>
+            <span className="text-[16px] font-bold tracking-tight text-[#0e9f6e]">
+              FINANZASAPP
+            </span>
+            <span className="text-[10px] text-[#64748B]">
+              control financiero
+            </span>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
           <PeriodSelector />
+
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -229,11 +277,23 @@ const AppLayout = () => {
         </div>
       </header>
 
-      <Dialog open={mobileOpen} onClose={() => setMobileOpen(false)} className="relative z-50 md:hidden">
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" aria-hidden="true" />
+      <Dialog
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        className="relative z-50 md:hidden"
+      >
+        <div
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+
         <div className="fixed inset-y-0 left-0 flex w-64 max-w-[80%]">
           <DialogPanel className="flex h-full w-full flex-col bg-[#f5fbf4] p-4 shadow-xl dark:bg-slate-900">
-            <SidebarContent collapsed={false} onNavigate={() => setMobileOpen(false)} onToggleCollapsed={() => setMobileOpen(false)} />
+            <SidebarContent
+              collapsed={false}
+              onNavigate={() => setMobileOpen(false)}
+              onToggleCollapsed={() => setMobileOpen(false)}
+            />
           </DialogPanel>
         </div>
       </Dialog>
@@ -256,7 +316,10 @@ const AppLayout = () => {
         <MessageCircle size={24} aria-hidden="true" />
       </button>
 
-      <ChatWidget open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatWidget
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
     </div>
   )
 }

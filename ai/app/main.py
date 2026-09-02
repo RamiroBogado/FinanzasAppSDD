@@ -63,10 +63,22 @@ def chatbot_message(payload: MessageRequest, user_id: int = Depends(require_user
     question = message.strip()
     history = _validated_history(payload.history)
     documents = retrieve_combined(user_id, question)
+    reply = build_reply(question, documents, history)
+
+    try:
+        action = interpret_action(question)
+    except Exception:
+        action = None
+
+    if action:
+        return {
+            "reply": "Revisá la acción propuesta y confirmala para realizarla.",
+            "action": action,
+        }
 
     return {
-        "reply": build_reply(question, documents, history),
-        "action": interpret_action(question),
+        "reply": reply,
+        "action": action,
     }
 
 

@@ -19,6 +19,29 @@ function now() {
   return new Date().toISOString()
 }
 
+function today() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function normalizeAction(action) {
+  if (!action || typeof action !== 'object' || !SUPPORTED_ACTIONS.has(action.type)) return null
+  if (typeof action.summary !== 'string' || !action.summary.trim() || !action.payload || typeof action.payload !== 'object') return null
+
+  const payload = { ...action.payload }
+  const colors = {
+    violeta: '#6366f1', morado: '#8b5cf6', amarillo: '#f59e0b', rojo: '#ef4444',
+    verde: '#10b981', azul: '#3b82f6', rosa: '#ec4899', turquesa: '#14b8a6', naranja: '#f97316'
+  }
+  if (typeof payload.color === 'string' && colors[payload.color.trim().toLowerCase()]) {
+    payload.color = colors[payload.color.trim().toLowerCase()]
+  }
+  if (action.type === 'create_transaction' && !payload.date) payload.date = today()
+  if (action.type === 'create_goal' && payload.savedAmount === undefined) payload.savedAmount = 0
+  if ((action.type === 'create_budget' || action.type === 'update_budget') && payload.threshold === undefined) payload.threshold = 80
+  if (action.type === 'create_category' && !payload.color) payload.color = '#6366f1'
+  return { ...action, payload }
+}
+
 function toPublic(row) {
   if (!row) return null
   return {
@@ -33,8 +56,8 @@ function toPublic(row) {
 }
 
 export function createActionRequest({ userId, action }) {
-  if (!action || typeof action !== 'object' || !SUPPORTED_ACTIONS.has(action.type)) return null
-  if (typeof action.summary !== 'string' || !action.summary.trim() || !action.payload || typeof action.payload !== 'object') return null
+  const normalizedAction = normalizeAction(action)
+  if (!normalizedAction) return null
 
   const id = randomUUID()
   const createdAt = now()
@@ -42,7 +65,7 @@ export function createActionRequest({ userId, action }) {
   getDatabase().prepare(`
     INSERT INTO chat_action_requests (id, user_id, action_type, payload, summary, status, expires_at, created_at)
     VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
-  `).run(id, userId, action.type, JSON.stringify(action.payload), action.summary.trim(), expiresAt, createdAt)
+  `).run(id, userId, normalizedAction.type, JSON.stringify(normalizedAction.payload), normalizedAction.summary.trim(), expiresAt, createdAt)
   return toPublic(getDatabase().prepare('SELECT * FROM chat_action_requests WHERE id = ?').get(id))
 }
 
@@ -102,7 +125,7 @@ function executeAction(userId, type, payload) {
   if (type === 'create_transaction' || type === 'update_transaction') {
     if (!['income', 'expense'].includes(payload.type)) throw new Error('El tipo de transacción no es válido')
     const amount = requireInteger(payload.amount, 'El monto debe ser un número entero positivo (en centavos)')
-    const date = requireText(payload.date, 'La fecha debe tener formato AAAA-MM-DD')
+    const date = typeof payload.date === 'string' && payload.date.trim() ? payload.date.trim() : today()
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('La fecha debe tener formato AAAA-MM-DD')
     const category = typeof payload.category === 'string' && payload.category.trim() ? payload.category.trim() : null
     if (category && !db.prepare('SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?)').get(userId, category)) throw new Error('La categoría no existe en tu catálogo')

@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.auth import require_user_id
-from app.chat import build_reply
+from app.chat import build_reply, interpret_action
 from app.config import CHAT_HISTORY_LIMIT
 from app.indexer import retrieve_combined, user_index
 
@@ -23,6 +23,7 @@ class MessageRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     reply: str
+    action: dict | None = None
 
 
 def _validated_history(history: list[dict] | None) -> list[dict]:
@@ -49,7 +50,7 @@ def health() -> dict:
     return {"status": "ok"}
 
 
-@router.post("/chatbot/message", response_model=MessageResponse)
+@router.post("/chatbot/message", response_model=MessageResponse, response_model_exclude_none=True)
 def chatbot_message(payload: MessageRequest, user_id: int = Depends(require_user_id)) -> dict:
     message = payload.message
 
@@ -63,7 +64,10 @@ def chatbot_message(payload: MessageRequest, user_id: int = Depends(require_user
     history = _validated_history(payload.history)
     documents = retrieve_combined(user_id, question)
 
-    return {"reply": build_reply(question, documents, history)}
+    return {
+        "reply": build_reply(question, documents, history),
+        "action": interpret_action(question),
+    }
 
 
 @router.post("/chatbot/clear")

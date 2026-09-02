@@ -1,4 +1,5 @@
 from datetime import date
+import json
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
@@ -72,3 +73,18 @@ def build_reply(question: str, documents: list[str], history=None, llm=None) -> 
     response = model.invoke(messages)
 
     return getattr(response, "content", "").strip() or "No pude generar una respuesta."
+
+
+ACTION_PROMPT = """Analizá el pedido del usuario de FinanzasApp. Si pide crear, editar, eliminar o ejecutar una acción, devolvé SOLO JSON con {\"reply\": texto breve en español, \"action\": {\"type\": tipo, \"summary\": resumen, \"payload\": objeto}}. Si es una consulta o faltan datos, devolvé {\"reply\": texto breve, \"action\": null}. Tipos permitidos: create_transaction, update_transaction, delete_transaction, create_category, update_category, delete_category, create_budget, update_budget, delete_budget, create_goal, update_goal, delete_goal, adjust_goal, mark_alert_read, mark_all_alerts_read, export_transactions. Los importes se expresan como enteros en centavos. Nunca inventes identificadores ni datos faltantes."""
+
+
+def interpret_action(question: str, llm=None) -> dict | None:
+    model = llm or create_llm()
+    response = model.invoke([SystemMessage(content=ACTION_PROMPT), HumanMessage(content=question)])
+    raw = getattr(response, "content", "").strip()
+    try:
+        parsed = json.loads(raw.removeprefix("```json").removesuffix("```").strip())
+    except (TypeError, ValueError):
+        return None
+    action = parsed.get("action") if isinstance(parsed, dict) else None
+    return action if isinstance(action, dict) else None

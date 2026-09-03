@@ -10,7 +10,7 @@ Sistema web completo para la gestión de finanzas personales multiusuario con un
 | Backend | Node.js + Express 5 (ESM) + better-sqlite3 |
 | Base de Datos | SQLite (WAL mode) |
 | Autenticación | JWT (HS256) + bcryptjs |
-| Chatbot IA | FastAPI + LangChain + Ollama (llama3.1:8b + nomic-embed-text) |
+| Chatbot IA | FastAPI + Ollama (llama3.1:8b + nomic-embed-text) |
 | Vector Store | ChromaDB (colecciones por usuario + knowledge compartida) |
 | Orquestación | Docker Compose |
 
@@ -35,54 +35,9 @@ Sistema web completo para la gestión de finanzas personales multiusuario con un
 
 ---
 
-## Arquitectura del Sistema
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Frontend (React + Vite)                    │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────────┐       │
-│  │ Dashboard │ │Transacc. │ │Categorías│ │ Presupuestos  │       │
-│  └──────────┘ └──────────┘ └──────────┘ └───────────────┘       │
-│  ┌──────────┐ ┌──────────────────┐ ┌───────────────────┐        │
-│  │  Metas   │ │ ChatBot Flotante │ │ Export CSV / Alerts│        │
-│  └──────────┘ └──────────────────┘ └───────────────────┘        │
-└────────────────────┬────────────────────────────┬────────────────┘
-                     │ HTTP (proxy Vite)           │ HTTP (proxy Vite)
-┌────────────────────▼──────────────────────┐  ┌────▼─────────────────────────────┐
-│         Backend (Node.js + Express 5)       │  │  Microservicio IA (FastAPI)       │
-│  ┌───────┐ ┌──────┐ ┌──────────┐ ┌───────┐  │  │ ┌─────────────────────────────┐  │
-│  │ Users │ │ Auth │ │Transactions│      │  │  │ │ LangChain RAG:               │  │
-│  └───────┘ └──────┘ └──────────┘      │  │  │ │ Indexer + Hybrid Retriever    │  │
-│  ┌───────┐ ┌────────┐ ┌──────────┐    │  │  │ │ + Cross-Encoder Reranker      │  │
-│  │Alerts │ │ Budget │ │ Goals    │    │  │  │ │ + Few-Shot + Function Calling │  │
-│  └───────┘ └────────┘ └──────────┘    │  │  │ └──────────────┬──────────────┘  │
-│  ┌──────────┐ ┌───────────────┐       │  │  │                │                 │
-│  │Export CSV│ │ finanzas.db   │◄──────┼──┼──┤ lee finanzas.db (SQLite)        │  │
-│  └──────────┘ └───────────────┘       │  │  └─────────────────────────────────┘  │
-│  ┌───────────────┐ ┌────────────────┐  │  └──────────────────────────────────────┘
-│  │Chat Actions   │ │ Rollover Track │  │
-│  │(propuestas)   │ │ (mensual)      │  │
-└───────────────────┴──────────────────┘
-                     │
-              ┌──────▼──────┐
-              │  ChromaDB   │
-              │ colecciones:│
-              │ finanzas-user-{id}  │
-              │ finanzas-knowledge  │
-              └─────────────┘
-                     │
-              ┌──────▼──────┐
-              │   Ollama    │
-              │ llama3.1:8b │
-              │ nomic-embed │
-              └─────────────┘
-```
-
----
-
 ## Servicio de IA (Chatbot) - Detalles Técnicos
 
-El asistente financiero es un **microservicio Python** (`ai/`) con **FastAPI + LangChain**, integrado en el frontend como un **widget flotante** accesible desde cualquier página.
+El asistente financiero es un **microservicio Python** (`ai/`) con **FastAPI**, integrado en el frontend como un **widget flotante** accesible desde cualquier página.
 
 ### Capacidades RAG Avanzadas
 
@@ -120,13 +75,17 @@ El asistente financiero es un **microservicio Python** (`ai/`) con **FastAPI + L
 
 Dos servidores MCP configurados en `opencode.json`:
 
-### 1. Filesystem Server (Externo)
+### 1. Filesystem Server (Local)
 - **Fuente**: `@modelcontextprotocol/server-filesystem`
 - **Rol**: Leer/escribir archivos del proyecto, exportar CSVs, gestionar configuración
 
 ### 2. Database Server (Externo)  
 - **Fuente**: `@modelcontextprotocol/server-sqlite`
 - **Rol**: Consultar directamente la base de datos SQLite para análisis y debugging
+
+### 3. GitHuhMCP (Externo)  
+- **Fuente**: `@modelcontextprotocol/server-sqlite](https://api.githubcopilot.com/mcp/`
+- **Rol**: Control de GitHub a través de un agente
 
 ---
 

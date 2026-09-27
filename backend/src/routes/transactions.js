@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/requireAuth.js'
+import { getTursoClient } from '../turso.js'
 import { toCsv, toPdf, toXlsx } from '../exporters.js'
 import {
   createTransaction,
@@ -36,7 +37,7 @@ function toToday() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function validatePayload(body, userId) {
+async function validatePayload(body, userId) {
   const { type, amount, date, description, category } = body ?? {}
 
   if (typeof type !== 'string' || !TRANSACTION_TYPES.includes(type)) {
@@ -72,7 +73,13 @@ function validatePayload(body, userId) {
     category !== null &&
     category.trim() !== ''
   ) {
-    // Category validation is performed by the categories repository during the broader migration.
+    const existsResult = await getTursoClient().execute({
+      sql: 'SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?) LIMIT 1',
+      args: [userId, category.trim()]
+    })
+    if (!existsResult.rows[0]) {
+      return { error: 'La categoría no existe en tu catálogo' }
+    }
     if (!exists) {
       return { error: 'La categoría no existe en tu catálogo' }
     }
@@ -125,7 +132,7 @@ function validateListQuery(query) {
 router.use(requireAuth)
 
 router.post('/', async (req, res) => {
-  const result = validatePayload(req.body, req.userId)
+  const result = await validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })

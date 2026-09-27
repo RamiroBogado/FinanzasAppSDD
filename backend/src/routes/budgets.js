@@ -8,14 +8,14 @@ import {
   toPublicBudget,
   updateBudget
 } from '../budgets.js'
-import { getDatabase } from '../db.js'
+import { getTursoClient } from '../turso.js'
 
 const router = Router()
 
 const MAX_CATEGORY_LENGTH = 32
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/
 
-function validatePayload(body, userId) {
+async function validatePayload(body, userId) {
   const { category, month, amount, threshold } = body ?? {}
 
   if (typeof category !== 'string' || category.trim() === '') {
@@ -34,10 +34,11 @@ function validatePayload(body, userId) {
     return { error: 'El monto debe ser un número entero positivo (en centavos)' }
   }
 
-  const cat = getDatabase()
-    .prepare('SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?) AND type = \'expense\' LIMIT 1')
-    .get(userId, category.trim())
-  if (!cat) {
+  const cat = await getTursoClient().execute({
+    sql: "SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?) AND type = 'expense' LIMIT 1",
+    args: [userId, category.trim()]
+  })
+  if (!cat.rows[0]) {
     return { error: 'La categoría no existe en tu catálogo o no es de tipo gasto' }
   }
 
@@ -56,15 +57,15 @@ function validatePayload(body, userId) {
 
 router.use(requireAuth)
 
-router.post('/', (req, res) => {
-  const result = validatePayload(req.body, req.userId)
+router.post('/', async (req, res) => {
+  const result = await validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
 
   try {
-    const budget = createBudget({
+    const budget = await createBudget({
       userId: req.userId,
       ...result.value,
       threshold: result.value.threshold ?? 80
@@ -72,7 +73,7 @@ router.post('/', (req, res) => {
 
     res.status(201).json(toPublicBudget(budget))
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return res.status(409).json({ error: 'Ya existe un presupuesto para esa categoría y mes' })
     }
 
@@ -80,7 +81,7 @@ router.post('/', (req, res) => {
   }
 })
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const { month, category, limit, offset } = req.query
 
   if (month !== undefined && (typeof month !== 'string' || !MONTH_PATTERN.test(month))) {
@@ -92,7 +93,7 @@ router.get('/', (req, res) => {
     return res.status(400).json({ error: 'El límite máximo es 200' })
   }
 
-  const budgets = listBudgets(req.userId, {
+  const budgets = await listBudgets(req.userId, {
     month: typeof month === 'string' ? month : undefined,
     category: typeof category === 'string' ? category : undefined,
     limit: Math.min(parseInt(limit) || 50, 200),
@@ -102,8 +103,8 @@ router.get('/', (req, res) => {
   res.json(budgets)
 })
 
-router.get('/:id', (req, res) => {
-  const budget = findBudgetById(req.params.id, req.userId)
+router.get('/:id', async (req, res) => {
+  const budget = await findBudgetById(req.params.id, req.userId)
 
   if (!budget) {
     return res.status(404).json({ error: 'Presupuesto no encontrado' })
@@ -112,7 +113,7 @@ router.get('/:id', (req, res) => {
   res.json(toPublicBudget(budget))
 })
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const result = validatePayload(req.body, req.userId)
 
   if (result.error) {
@@ -120,7 +121,7 @@ router.put('/:id', (req, res) => {
   }
 
   try {
-    const budget = updateBudget(req.params.id, req.userId, result.value)
+    const budget = await updateBudget(req.params.id, req.userId, result.value)
 
     if (!budget) {
       return res.status(404).json({ error: 'Presupuesto no encontrado' })
@@ -136,10 +137,10 @@ router.put('/:id', (req, res) => {
   }
 })
 
-router.delete('/:id', (req, res) => {
-  const result = deleteBudget(req.params.id, req.userId)
+router.delete('/:id', async (req, res) => {
+  const result = await deleteBudget(req.params.id, req.userId)
 
-  if (result.changes === 0) {
+  if (Number(result.rowsAffected) === 0) {
     return res.status(404).json({ error: 'Presupuesto no encontrado' })
   }
 

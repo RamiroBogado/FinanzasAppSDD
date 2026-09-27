@@ -54,7 +54,7 @@ let chatRateLimit = (req, res, next) => next()
 let apiRateLimit = (req, res, next) => next()
 
 if (!isTest) {
-  const rateLimit = (await import('express-rate-limit')).default
+  const { default: rateLimit, ipKeyGenerator } = await import('express-rate-limit')
   
   authRateLimit = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MS) || 60000,
@@ -62,7 +62,7 @@ if (!isTest) {
     message: { error: 'Demasiadas peticiones, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
   })
 
   forgotRateLimit = rateLimit({
@@ -80,7 +80,7 @@ if (!isTest) {
     message: { error: 'Demasiadas consultas al asistente, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.userId || req.ip,
+    keyGenerator: (req) => req.userId || ipKeyGenerator(req.ip),
   })
 
   apiRateLimit = rateLimit({

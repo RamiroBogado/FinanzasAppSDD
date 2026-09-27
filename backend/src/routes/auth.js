@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { jwtExpiresIn, jwtSecret } from '../config.js'
 import { requireAuth } from '../middleware/requireAuth.js'
-import { getDatabase } from '../db.js'
+import { getTursoClient } from '../turso.js'
 import {
   createUser,
   findUserByEmail,
@@ -39,23 +39,23 @@ router.post('/register', async (req, res) => {
 
   const normalizedEmail = email.toLowerCase()
 
-  if (findUserByUsername(username)) {
+  if (await findUserByUsername(username)) {
     return res.status(409).json({ error: 'El nombre de usuario ya está en uso' })
   }
 
-  if (findUserByEmail(normalizedEmail)) {
+  if (await findUserByEmail(normalizedEmail)) {
     return res.status(409).json({ error: 'El correo electrónico ya está en uso' })
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
-  const user = createUser({ username, email: normalizedEmail, passwordHash })
+  const user = await createUser({ username, email: normalizedEmail, passwordHash })
 
   res.status(201).json(toPublicUser(user))
 })
 
 router.post('/login', async (req, res) => {
   const { username, password } = req.body ?? {}
-  const user = typeof username === 'string' ? findUserByUsername(username) : undefined
+  const user = typeof username === 'string' ? await findUserByUsername(username) : undefined
 
   if (!user || typeof password !== 'string' || !(await bcrypt.compare(password, user.password_hash))) {
     return res.status(401).json({ error: 'Usuario o contraseña incorrectos' })
@@ -71,7 +71,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', requireAuth, (req, res) => {
   createRolloverIfNeeded(req.userId)
   
-  const user = findUserById(req.userId)
+  const user = await findUserById(req.userId)
 
   if (!user) {
     return res.status(401).json({ error: 'No autorizado' })
@@ -88,7 +88,7 @@ router.post('/forgot-password', async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase()
-  const user = findUserByEmail(normalizedEmail)
+  const user = await findUserByEmail(normalizedEmail)
 
   // Siempre responder 200 genérico para no revelar si el email existe
   const genericResponse = {
@@ -110,10 +110,13 @@ router.post('/forgot-password', async (req, res) => {
   )
 
   try {
-    getDatabase().prepare(`
-      INSERT INTO password_reset_tokens (user_id, jti, used, expires_at, created_at)
-      VALUES (?, ?, 0, ?, ?)
-    `).run(user.id, jti, expiresAt, createdAt)
+    await getTursoClient().execute({
+      sql: `
+        INSERT INTO password_reset_tokens (user_id, jti, used, expires_at, created_at)
+        VALUES (?, ?, 0, ?, ?)
+      `,
+      args: [user.id, jti, expiresAt, createdAt]
+    })
   } catch (err) {
     console.error('Error guardando token de reset:', err)
   }
@@ -180,10 +183,14 @@ router.post('/reset-password', async (req, res) => {
     return res.status(400).json({ error: 'Token inválido' })
   }
 
-  const db = getDatabase()
-  const tokenRecord = db.prepare(`
-    SELECT * FROM password_reset_tokens WHERE jti = ? AND used = 0
-  `).get(payload.jti)
+  const client = getTursoClient()
+  const tokenResult = await client.execute({
+    sql: `
+      SELECT * FROM password_reset_tokens WHERE jti = ? AND used = 0
+    `,
+    args: [payload.jti]
+  })
+  const tokenRecord = tokenResult.rows[0]
 
   if (!tokenRecord) {
     return res.status(400).json({ error: 'Token inválido o ya utilizado' })
@@ -195,9 +202,9 @@ router.post('/reset-password', async (req, res) => {
 
   const passwordHash = await bcrypt.hash(newPassword, 10)
 
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, payload.sub)
+  await client.execute({\n    sql: 'UPDATE users SET password_hash = ? WHERE id = ?',\n    args: [passwordHash, payload.sub]\n  })
 
-  db.prepare('UPDATE password_reset_tokens SET used = 1 WHERE jti = ?').run(payload.jti)
+  await client.execute({\n    sql: 'UPDATE password_reset_tokens SET used = 1 WHERE jti = ?',\n    args: [payload.jti]\n  })
 
   res.json({ message: 'Contraseña actualizada' })
 })
@@ -205,7 +212,7 @@ router.post('/reset-password', async (req, res) => {
 router.get('/me', requireAuth, (req, res) => {
   createRolloverIfNeeded(req.userId)
   
-  const user = findUserById(req.userId)
+  const user = await findUserById(req.userId)
 
   if (!user) {
     return res.status(401).json({ error: 'No autorizado' })

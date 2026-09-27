@@ -8,6 +8,9 @@ import categoriesRouter from './routes/categories.js'
 import chatRouter from './routes/chat.js'
 import goalsRouter from './routes/goals.js'
 import transactionsRouter from './routes/transactions.js'
+import { initTursoSchema } from './tursoSchema.js'
+
+await initTursoSchema()
 
 const app = express()
 

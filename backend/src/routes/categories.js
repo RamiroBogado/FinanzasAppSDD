@@ -64,12 +64,12 @@ function validatePartialPayload(body) {
 
 router.use(requireAuth)
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const categories = listCategories(req.userId)
   res.json(categories)
 })
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const result = validatePayload(req.body)
 
   if (result.error) {
@@ -77,30 +77,30 @@ router.post('/', (req, res) => {
   }
 
   try {
-    const category = createCategory({ userId: req.userId, ...result.value })
+    const category = await createCategory({ userId: req.userId, ...result.value })
     res.status(201).json(category)
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return res.status(400).json({ error: 'Ya existe una categoría con ese nombre' })
     }
     throw err
   }
 })
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const result = validatePartialPayload(req.body)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
 
-  const existing = findCategoryById(req.params.id, req.userId)
+  const existing = await findCategoryById(req.params.id, req.userId)
   if (!existing) {
     return res.status(404).json({ error: 'Categoría no encontrada' })
   }
 
   try {
-    const category = updateCategory(req.params.id, req.userId, result.value)
+    const category = await updateCategory(req.params.id, req.userId, result.value)
     res.json(category)
   } catch (err) {
     if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
@@ -110,8 +110,8 @@ router.put('/:id', (req, res) => {
   }
 })
 
-router.delete('/:id', (req, res) => {
-  const existing = findCategoryById(req.params.id, req.userId)
+router.delete('/:id', async (req, res) => {
+  const existing = await findCategoryById(req.params.id, req.userId)
   if (!existing) {
     return res.status(404).json({ error: 'Categoría no encontrada' })
   }

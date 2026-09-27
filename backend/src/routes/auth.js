@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
 })
 
 router.get('/me', requireAuth, async (req, res) => {
-  createRolloverIfNeeded(req.userId)
+  await createRolloverIfNeeded(req.userId)
   
   const user = await findUserById(req.userId)
 

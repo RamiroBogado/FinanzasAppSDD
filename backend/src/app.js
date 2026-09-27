@@ -32,7 +32,13 @@ app.use(helmet({
 }))
 
 // CORS
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',').map(o => o.trim())
+const vercelOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+const allowedOrigins = [
+  ...((process.env.CORS_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean)),
+  'http://localhost:5173',
+  vercelOrigin,
+  'https://finanzas-app-sdd.vercel.app',
+].filter(Boolean)
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true)

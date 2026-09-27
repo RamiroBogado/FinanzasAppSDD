@@ -194,7 +194,7 @@ router.get('/:id', async (req, res) => {
 })
 
 router.put('/:id', async (req, res) => {
-  const result = validatePayload(req.body, req.userId)
+  const result = await validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })

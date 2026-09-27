@@ -68,7 +68,7 @@ router.post('/login', async (req, res) => {
   res.json({ token })
 })
 
-router.get('/me', requireAuth, (req, res) => {
+router.get('/me', requireAuth, async (req, res) => {
   createRolloverIfNeeded(req.userId)
   
   const user = await findUserById(req.userId)
@@ -202,23 +202,17 @@ router.post('/reset-password', async (req, res) => {
 
   const passwordHash = await bcrypt.hash(newPassword, 10)
 
-  await client.execute({\n    sql: 'UPDATE users SET password_hash = ? WHERE id = ?',\n    args: [passwordHash, payload.sub]\n  })
+  await client.execute({
+    sql: 'UPDATE users SET password_hash = ? WHERE id = ?',
+    args: [passwordHash, payload.sub]
+  })
 
-  await client.execute({\n    sql: 'UPDATE password_reset_tokens SET used = 1 WHERE jti = ?',\n    args: [payload.jti]\n  })
+  await client.execute({
+    sql: 'UPDATE password_reset_tokens SET used = 1 WHERE jti = ?',
+    args: [payload.jti]
+  })
 
   res.json({ message: 'Contraseña actualizada' })
-})
-
-router.get('/me', requireAuth, (req, res) => {
-  createRolloverIfNeeded(req.userId)
-  
-  const user = await findUserById(req.userId)
-
-  if (!user) {
-    return res.status(401).json({ error: 'No autorizado' })
-  }
-
-  res.json(toPublicUser(user))
 })
 
 export default router

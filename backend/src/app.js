@@ -107,6 +107,10 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' })
 })
 
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' })
+})
+
 // Auth routes with specific rate limits
 app.use('/api/auth/register', authRateLimit)
 app.use('/api/auth/login', authRateLimit)
@@ -135,7 +139,7 @@ app.use('/api/alerts', alertsRouter)
 app.use('/api/categories', categoriesRouter)
 
 // Global error handler
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   console.error('Unhandled error:', err)
   const status = err.status || 500
   const message = err.message || 'Error interno del servidor'

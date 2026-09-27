@@ -19,7 +19,8 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^9.0.6",
-    "pdfkit": "^0.19.1"
+    "pdfkit": "^0.19.1",
+    "@libsql/client": "^0.18.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

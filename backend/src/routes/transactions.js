@@ -80,9 +80,6 @@ async function validatePayload(body, userId) {
     if (!existsResult.rows[0]) {
       return { error: 'La categoría no existe en tu catálogo' }
     }
-    if (!exists) {
-      return { error: 'La categoría no existe en tu catálogo' }
-    }
   }
 
   return {

@@ -71,7 +71,7 @@ if (!isTest) {
     message: { error: 'Demasiadas peticiones, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
   })
 
   chatRateLimit = rateLimit({
@@ -89,7 +89,7 @@ if (!isTest) {
     message: { error: 'Límite de peticiones excedido, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.userId || req.ip,
+    keyGenerator: (req) => req.userId ? String(req.userId) : ipKeyGenerator(req.ip),
   })
 }
 

@@ -1,24 +1,51 @@
-import { getDatabase } from './db.js'
+import { getTursoClient } from './turso.js'
 
-export function findUserById(id) {
-  return getDatabase().prepare('SELECT * FROM users WHERE id = ?').get(id)
+function normalizeUser(row) {
+  if (!row) return undefined
+
+  return {
+    ...row,
+    id: Number(row.id)
+  }
 }
 
-export function findUserByUsername(username) {
-  return getDatabase().prepare('SELECT * FROM users WHERE username = ?').get(username)
+export async function findUserById(id) {
+  const result = await getTursoClient().execute({
+    sql: 'SELECT * FROM users WHERE id = ?',
+    args: [id]
+  })
+
+  return normalizeUser(result.rows[0])
 }
 
-export function findUserByEmail(email) {
-  return getDatabase().prepare('SELECT * FROM users WHERE email = ?').get(email)
+export async function findUserByUsername(username) {
+  const result = await getTursoClient().execute({
+    sql: 'SELECT * FROM users WHERE username = ?',
+    args: [username]
+  })
+
+  return normalizeUser(result.rows[0])
 }
 
-export function createUser({ username, email, passwordHash }) {
+export async function findUserByEmail(email) {
+  const result = await getTursoClient().execute({
+    sql: 'SELECT * FROM users WHERE email = ?',
+    args: [email]
+  })
+
+  return normalizeUser(result.rows[0])
+}
+
+export async function createUser({ username, email, passwordHash }) {
   const createdAt = new Date().toISOString().slice(0, 10)
-  const result = getDatabase()
-    .prepare('INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)')
-    .run(username, email, passwordHash, createdAt)
+  const client = getTursoClient()
 
-  return findUserById(result.lastInsertRowid)
+  const result = await client.execute({
+    sql: 'INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)',
+    args: [username, email, passwordHash, createdAt]
+  })
+
+  return findUserById(Number(result.lastInsertRowid))
 }
 
 export function toPublicUser(user) {

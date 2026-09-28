@@ -65,7 +65,7 @@ function validatePartialPayload(body) {
 router.use(requireAuth)
 
 router.get('/', async (req, res) => {
-  const categories = listCategories(req.userId)
+  const categories = await listCategories(req.userId)
   res.json(categories)
 })
 
@@ -116,7 +116,7 @@ router.delete('/:id', async (req, res) => {
     return res.status(404).json({ error: 'Categoría no encontrada' })
   }
 
-  const inUse = deleteCategory(req.params.id, req.userId)
+  const inUse = await deleteCategory(req.params.id, req.userId)
   if (inUse) {
     return res.status(409).json({ error: 'No se puede eliminar: la categoría está en uso' })
   }

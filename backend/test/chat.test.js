@@ -5,6 +5,7 @@ let app
 let aiStub
 let aiStubPort
 const aiCalls = []
+const aiAuthHeaders = []
 
 let stubBehavior = { status: 200, body: { reply: 'respuesta simulada' }, failConnection: false }
 
@@ -16,6 +17,7 @@ beforeAll(async () => {
     })
     req.on('end', () => {
       aiCalls.push(JSON.parse(raw || '{}'))
+      aiAuthHeaders.push(req.headers.authorization)
 
       if (stubBehavior.failConnection) {
         res.socket.destroy()
@@ -48,6 +50,7 @@ beforeEach(async () => {
   getDatabase().prepare('DELETE FROM transactions').run()
   getDatabase().prepare('DELETE FROM users').run()
   aiCalls.length = 0
+  aiAuthHeaders.length = 0
   stubBehavior = { status: 200, body: { reply: 'respuesta simulada' }, failConnection: false }
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
@@ -201,6 +204,8 @@ describe('envío de mensaje vía backend', () => {
     })
 
     expect(aiCalls).toHaveLength(1)
+    expect(aiAuthHeaders).toHaveLength(1)
+    expect(aiAuthHeaders[0]).toBe(`Bearer ${token}`)
   })
 
   it('recorta el historial enviado a los últimos turnos configurados', async () => {
@@ -255,6 +260,38 @@ describe('falla del servicio de IA', () => {
 
     expect(status).toBe(502)
     expect(body.error).toBe('El asistente no está disponible en este momento')
+
+    const history = await request('/api/chat/messages', { token })
+
+    expect(history.body).toEqual([])
+  })
+
+  it('responde 502 cuando la IA excede el tiempo de espera', async () => {
+    const token = await registerAndLogin({ username: 'rama', email: 'rama@example.com' })
+    const originalFetch = globalThis.fetch
+    let observedSignal = null
+
+    globalThis.fetch = async (url, options) => {
+      if (String(url).includes('/ai/chatbot/message')) {
+        observedSignal = options?.signal ?? null
+        throw new DOMException('The operation was aborted due to timeout', 'TimeoutError')
+      }
+      return originalFetch(url, options)
+    }
+
+    try {
+      const { status, body } = await request('/api/chat/messages', {
+        method: 'POST',
+        body: { message: 'Pregunta con timeout' },
+        token
+      })
+
+      expect(status).toBe(502)
+      expect(body.error).toBe('El asistente no está disponible en este momento')
+      expect(observedSignal).not.toBeNull()
+    } finally {
+      globalThis.fetch = originalFetch
+    }
 
     const history = await request('/api/chat/messages', { token })
 

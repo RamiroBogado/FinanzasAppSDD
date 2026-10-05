@@ -1,6 +1,10 @@
 import sqlite3
 
-from app.config import DB_PATH
+from app.config import DB_PATH, TURSO_AUTH_TOKEN, TURSO_DATABASE_URL
+
+
+def _use_turso() -> bool:
+    return bool(TURSO_DATABASE_URL and TURSO_AUTH_TOKEN)
 
 
 def _connect() -> sqlite3.Connection:
@@ -9,7 +13,24 @@ def _connect() -> sqlite3.Connection:
     return connection
 
 
+def _fetch_turso(query: str, params: tuple = ()) -> list[dict]:
+    import libsql_experimental as libsql
+
+    connection = libsql.connect(database=TURSO_DATABASE_URL, auth_token=TURSO_AUTH_TOKEN)
+    try:
+        cursor = connection.execute(query, params)
+        columns = [column[0] for column in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+    finally:
+        close = getattr(connection, "close", None)
+        if callable(close):
+            close()
+
+
 def _fetch_all(query: str, params: tuple = ()) -> list[dict]:
+    if _use_turso():
+        return _fetch_turso(query, params)
+
     with _connect() as connection:
         rows = connection.execute(query, params).fetchall()
 

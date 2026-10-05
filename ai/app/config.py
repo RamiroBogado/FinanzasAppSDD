@@ -21,6 +21,15 @@ DB_PATH = os.getenv(
 VECTOR_STORE = os.getenv("VECTOR_STORE", "memory")
 CHROMA_PATH = os.getenv("CHROMA_PATH", os.path.join(_PROJECT_ROOT, "chroma_data"))
 
+TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL", "")
+TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN", "")
+
+if os.getenv("ENV") == "production" and not (TURSO_DATABASE_URL and TURSO_AUTH_TOKEN):
+    print(
+        "WARNING: TURSO_DATABASE_URL/TURSO_AUTH_TOKEN not set; AI uses local SQLite fallback",
+        file=sys.stderr,
+    )
+
 RETRIEVAL_LIMIT = 12
 CHAT_HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "10"))
 

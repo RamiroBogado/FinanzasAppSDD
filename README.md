@@ -323,6 +323,35 @@ TOOLS_ENABLED=true
 
 ---
 
+## Despliegue híbrido (producción)
+
+La web y la API operan juntas en un mismo alojamiento; el servicio de IA opera en un
+alojamiento externo (Fly.io) con volumen persistente para Chroma (`CHROMA_PATH`) y la
+caché de modelos. Turso es la única fuente de datos en producción: la IA la lee en
+solo-lectura con un token dedicado (`TURSO_AUTH_TOKEN`). Sin `TURSO_*`, la IA usa la
+base local (`DB_PATH`) en solo-lectura, solo apta para desarrollo local y rollback.
+
+El flujo es `frontend → backend → IA`: el frontend solo llama a `/api/*`; el backend
+reenvía `POST /api/chat/messages` a `${AI_SERVICE_URL}/ai/chatbot/message` propagando
+el `Authorization` original, con timeout configurable (`AI_TIMEOUT_MS`, 25000 ms por
+defecto). Si la IA no responde o su respuesta es inválida, el backend responde 502 con
+`El asistente no está disponible en este momento`.
+
+### Arranque en frío
+
+En el primer arranque (o tras un reinicio en frío) el host de la IA debe tener los
+modelos pre-descargados (`llama3.1:8b`, `nomic-embed-text`, igual que `ollama-init`) y
+el volumen de Chroma montado; la primera consulta paga la reconstrucción del índice y
+puede tardar minutos. Ajustar `AI_TIMEOUT_MS` según el p95 medido en staging.
+
+### Rollback
+
+Solo configuración, sin migraciones: apuntar `AI_SERVICE_URL` al servicio local y
+vaciar `TURSO_*` para que la IA vuelva a SQLite local en solo-lectura. El contrato no
+cambia, así que el rollback no toca frontend ni endpoints.
+
+---
+
 ## Decisiones Técnicas Clave
 
 | Tema | Decisión |

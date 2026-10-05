@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { aiServiceUrl } from '../config.js'
+import { aiServiceUrl, aiTimeoutMs } from '../config.js'
 import {
   deleteChatMessages,
   listChatMessages,
@@ -62,7 +62,8 @@ router.post('/messages', async (req, res) => {
         'Content-Type': 'application/json',
         Authorization: req.headers.authorization
       },
-      body: JSON.stringify({ message, history })
+      body: JSON.stringify({ message, history }),
+      signal: AbortSignal.timeout(aiTimeoutMs)
     })
   } catch {
     return res.status(502).json({ error: 'El asistente no está disponible en este momento' })

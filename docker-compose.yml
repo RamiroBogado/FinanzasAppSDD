@@ -21,6 +21,8 @@ services:
       DB_PATH: /app/data/finanzas.db
       VECTOR_STORE: chroma
       CHROMA_PATH: /app/chroma
+      TURSO_DATABASE_URL: ${TURSO_DATABASE_URL:-}
+      TURSO_AUTH_TOKEN: ${TURSO_AUTH_TOKEN:-}
     volumes:
       - finanzas_data:/app/data
       - chroma_data:/app/chroma

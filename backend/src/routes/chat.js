@@ -31,8 +31,8 @@ function containsPromptInjection(message) {
 
 router.use(requireAuth)
 
-router.get('/messages', (req, res) => {
-  res.json(listChatMessages(req.userId))
+router.get('/messages', async (req, res) => {
+  res.json(await listChatMessages(req.userId))
 })
 
 router.post('/messages', async (req, res) => {
@@ -51,7 +51,7 @@ router.post('/messages', async (req, res) => {
     return res.status(400).json({ error: 'Mensaje no válido' })
   }
 
-  const history = recentChatHistory(req.userId)
+  const history = await recentChatHistory(req.userId)
 
   let response
 
@@ -81,8 +81,8 @@ router.post('/messages', async (req, res) => {
     return res.status(502).json({ error: 'El asistente no está disponible en este momento' })
   }
 
-  const action = createActionRequest({ userId: req.userId, action: data.action })
-  saveChatTurn({ userId: req.userId, message, reply: data.reply })
+  const action = await createActionRequest({ userId: req.userId, action: data.action })
+  await saveChatTurn({ userId: req.userId, message, reply: data.reply })
 
   console.log(JSON.stringify({
     userId: req.userId,
@@ -94,9 +94,9 @@ router.post('/messages', async (req, res) => {
   return res.json({ reply: data.reply, action })
 })
 
-router.post('/actions/:id/confirm', (req, res) => {
+router.post('/actions/:id/confirm', async (req, res) => {
   try {
-    const result = confirmActionRequest(req.params.id, req.userId)
+    const result = await confirmActionRequest(req.params.id, req.userId)
     if (result.error === 'not_found') return res.status(404).json({ error: 'Acción no encontrada' })
     if (result.error === 'unavailable') return res.status(409).json({ error: 'La acción ya no está disponible' })
     return res.json(result)
@@ -105,15 +105,15 @@ router.post('/actions/:id/confirm', (req, res) => {
   }
 })
 
-router.post('/actions/:id/cancel', (req, res) => {
-  if (!cancelActionRequest(req.params.id, req.userId)) {
+router.post('/actions/:id/cancel', async (req, res) => {
+  if (!await cancelActionRequest(req.params.id, req.userId)) {
     return res.status(404).json({ error: 'Acción no encontrada o no disponible' })
   }
   return res.json({ status: 'cancelled' })
 })
 
-router.delete('/messages', (req, res) => {
-  deleteChatMessages(req.userId)
+router.delete('/messages', async (req, res) => {
+  await deleteChatMessages(req.userId)
 
   res.json({ status: 'ok' })
 })

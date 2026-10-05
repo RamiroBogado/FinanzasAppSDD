@@ -8,6 +8,9 @@ import categoriesRouter from './routes/categories.js'
 import chatRouter from './routes/chat.js'
 import goalsRouter from './routes/goals.js'
 import transactionsRouter from './routes/transactions.js'
+import { initTursoSchema } from './tursoSchema.js'
+
+await initTursoSchema()
 
 const app = express()
 
@@ -32,7 +35,13 @@ app.use(helmet({
 }))
 
 // CORS
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',').map(o => o.trim())
+const vercelOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null
+const allowedOrigins = [
+  ...((process.env.CORS_ORIGIN || '').split(',').map(o => o.trim()).filter(Boolean)),
+  'http://localhost:5173',
+  vercelOrigin,
+  'https://finanzas-app-sdd.vercel.app',
+].filter(Boolean)
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
@@ -54,7 +63,7 @@ let chatRateLimit = (req, res, next) => next()
 let apiRateLimit = (req, res, next) => next()
 
 if (!isTest) {
-  const rateLimit = (await import('express-rate-limit')).default
+  const { default: rateLimit, ipKeyGenerator } = await import('express-rate-limit')
   
   authRateLimit = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MS) || 60000,
@@ -62,7 +71,7 @@ if (!isTest) {
     message: { error: 'Demasiadas peticiones, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
   })
 
   forgotRateLimit = rateLimit({
@@ -71,7 +80,7 @@ if (!isTest) {
     message: { error: 'Demasiadas peticiones, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
   })
 
   chatRateLimit = rateLimit({
@@ -80,7 +89,7 @@ if (!isTest) {
     message: { error: 'Demasiadas consultas al asistente, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.userId || req.ip,
+    keyGenerator: (req) => req.userId || ipKeyGenerator(req.ip),
   })
 
   apiRateLimit = rateLimit({
@@ -89,12 +98,16 @@ if (!isTest) {
     message: { error: 'Límite de peticiones excedido, intentá más tarde' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.userId || req.ip,
+    keyGenerator: (req) => req.userId ? String(req.userId) : ipKeyGenerator(req.ip),
   })
 }
 
 // Health check (sin rate limit)
 app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' })
+})
+
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' })
 })
 
@@ -126,7 +139,7 @@ app.use('/api/alerts', alertsRouter)
 app.use('/api/categories', categoriesRouter)
 
 // Global error handler
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   console.error('Unhandled error:', err)
   const status = err.status || 500
   const message = err.message || 'Error interno del servidor'

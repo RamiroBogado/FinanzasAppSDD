@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { requireAuth } from '../middleware/requireAuth.js'
+import { getTursoClient } from '../turso.js'
 import { toCsv, toPdf, toXlsx } from '../exporters.js'
 import {
   createTransaction,
@@ -9,7 +10,6 @@ import {
   toPublicTransaction,
   updateTransaction
 } from '../transactions.js'
-import { getDatabase } from '../db.js'
 
 const router = Router()
 
@@ -37,7 +37,7 @@ function toToday() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function validatePayload(body, userId) {
+async function validatePayload(body, userId) {
   const { type, amount, date, description, category } = body ?? {}
 
   if (typeof type !== 'string' || !TRANSACTION_TYPES.includes(type)) {
@@ -73,10 +73,11 @@ function validatePayload(body, userId) {
     category !== null &&
     category.trim() !== ''
   ) {
-    const exists = getDatabase()
-      .prepare('SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?) LIMIT 1')
-      .get(userId, category.trim())
-    if (!exists) {
+    const existsResult = await getTursoClient().execute({
+      sql: 'SELECT 1 FROM categories WHERE user_id = ? AND lower(name) = lower(?) LIMIT 1',
+      args: [userId, category.trim()]
+    })
+    if (!existsResult.rows[0]) {
       return { error: 'La categoría no existe en tu catálogo' }
     }
   }
@@ -127,25 +128,25 @@ function validateListQuery(query) {
 
 router.use(requireAuth)
 
-router.post('/', (req, res) => {
-  const result = validatePayload(req.body, req.userId)
+router.post('/', async (req, res) => {
+  const result = await validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
 
-  const transaction = createTransaction({ userId: req.userId, ...result.value })
+  const transaction = await createTransaction({ userId: req.userId, ...result.value })
   res.status(201).json(toPublicTransaction(transaction))
 })
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   const result = validateListQuery(req.query)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
 
-  const transactions = listTransactions(req.userId, result.value)
+  const transactions = await listTransactions(req.userId, result.value)
 
   res.json(transactions)
 })
@@ -163,7 +164,7 @@ router.get('/export', async (req, res) => {
     return res.status(400).json({ error: result.error })
   }
 
-  const transactionsResult = listTransactions(req.userId, result.value)
+  const transactionsResult = await listTransactions(req.userId, result.value)
   const transactions = transactionsResult.data
   const filename = `transacciones-${toToday()}.${exportFormat.extension}`
 
@@ -179,8 +180,8 @@ router.get('/export', async (req, res) => {
   res.send(buffer)
 })
 
-router.get('/:id', (req, res) => {
-  const transaction = findTransactionById(req.params.id, req.userId)
+router.get('/:id', async (req, res) => {
+  const transaction = await findTransactionById(req.params.id, req.userId)
 
   if (!transaction) {
     return res.status(404).json({ error: 'Transacción no encontrada' })
@@ -189,14 +190,14 @@ router.get('/:id', (req, res) => {
   res.json(toPublicTransaction(transaction))
 })
 
-router.put('/:id', (req, res) => {
-  const result = validatePayload(req.body, req.userId)
+router.put('/:id', async (req, res) => {
+  const result = await validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
   }
 
-  const transaction = updateTransaction(req.params.id, req.userId, result.value)
+  const transaction = await updateTransaction(req.params.id, req.userId, result.value)
 
   if (!transaction) {
     return res.status(404).json({ error: 'Transacción no encontrada' })
@@ -205,10 +206,10 @@ router.put('/:id', (req, res) => {
   res.json(toPublicTransaction(transaction))
 })
 
-router.delete('/:id', (req, res) => {
-  const result = deleteTransaction(req.params.id, req.userId)
+router.delete('/:id', async (req, res) => {
+  const result = await deleteTransaction(req.params.id, req.userId)
 
-  if (result.changes === 0) {
+  if (Number(result.rowsAffected) === 0) {
     return res.status(404).json({ error: 'Transacción no encontrada' })
   }
 

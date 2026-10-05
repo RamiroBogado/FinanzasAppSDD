@@ -1,4 +1,4 @@
-import { getDatabase } from './db.js'
+import { getTursoClient } from './turso.js'
 
 const LIST_QUERY = `
 SELECT b.*,
@@ -16,41 +16,12 @@ SELECT COUNT(*) as count FROM budgets b WHERE b.user_id = ?
 
 const ORDER_BY = ' ORDER BY b.month DESC, b.category COLLATE NOCASE ASC'
 
-export function listBudgets(userId, { month, category, limit = 50, offset = 0 } = {}) {
-  const conditions = []
-  const params = []
-
-  if (month) {
-    conditions.push('b.month = ?')
-    params.push(month)
-  }
-
-  if (category) {
-    conditions.push('lower(b.category) = lower(?)')
-    params.push(category)
-  }
-
-  const countParams = [userId]
-  if (month) {
-    countParams.push(month)
-  }
-  if (category) {
-    countParams.push(category)
-  }
-
-  const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
-  const query = `${LIST_QUERY} ${whereClause}${ORDER_BY} LIMIT ? OFFSET ?`
-  const countQuery = `${COUNT_QUERY} ${whereClause}`
-
-  const total = getDatabase().prepare(countQuery).get(...[userId, ...(month ? [month] : []), ...(category ? [category] : [])]).count
-
-  const queryParams = [userId, ...params, Math.min(parseInt(limit) || 50, 200), parseInt(offset) || 0]
-  const data = getDatabase().prepare(query).all(...queryParams)
-
-  return { data, total, limit: Math.min(parseInt(limit) || 50, 200), offset: parseInt(offset) || 0 }
+function normalizeBudget(row) {
+  if (!row) return undefined
+  return { ...row, id: Number(row.id), user_id: Number(row.user_id) }
 }
 
-export function countBudgets(userId, { month, category } = {}) {
+export async function listBudgets(userId, { month, category, limit = 50, offset = 0 } = {}) {
   const conditions = []
   const params = [userId]
 
@@ -65,38 +36,79 @@ export function countBudgets(userId, { month, category } = {}) {
   }
 
   const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
+  const query = `${LIST_QUERY} ${whereClause}${ORDER_BY} LIMIT ? OFFSET ?`
   const countQuery = `${COUNT_QUERY} ${whereClause}`
+  const client = getTursoClient()
 
-  return getDatabase().prepare(countQuery).get(...params.slice(1)).count
+  const countResult = await client.execute({ sql: countQuery, args: params })
+  const total = Number(countResult.rows[0]?.count ?? 0)
+  const normalizedLimit = Math.min(parseInt(limit) || 50, 200)
+  const normalizedOffset = parseInt(offset) || 0
+
+  const dataResult = await client.execute({
+    sql: query,
+    args: [...params, normalizedLimit, normalizedOffset]
+  })
+
+  const data = dataResult.rows.map(normalizeBudget)
+  return { data, total, limit: normalizedLimit, offset: normalizedOffset }
 }
 
-export function findBudgetById(id, userId) {
-  return getDatabase().prepare(`${LIST_QUERY} AND b.id = ?`).get(userId, id)
+export async function countBudgets(userId, { month, category } = {}) {
+  const conditions = []
+  const params = [userId]
+
+  if (month) {
+    conditions.push('b.month = ?')
+    params.push(month)
+  }
+
+  if (category) {
+    conditions.push('lower(b.category) = lower(?)')
+    params.push(category)
+  }
+
+  const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
+  const result = await getTursoClient().execute({
+    sql: `${COUNT_QUERY} ${whereClause}`,
+    args: params
+  })
+
+  return Number(result.rows[0]?.count ?? 0)
 }
 
-export function createBudget({ userId, category, month, amount, threshold }) {
+export async function findBudgetById(id, userId) {
+  const result = await getTursoClient().execute({
+    sql: `${LIST_QUERY} AND b.id = ?`,
+    args: [userId, id]
+  })
+  return normalizeBudget(result.rows[0])
+}
+
+export async function createBudget({ userId, category, month, amount, threshold }) {
   const createdAt = new Date().toISOString().slice(0, 10)
-  const result = getDatabase()
-    .prepare(
-      'INSERT INTO budgets (user_id, category, month, amount, threshold, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-    )
-    .run(userId, category, month, amount, threshold, createdAt)
+  const result = await getTursoClient().execute({
+    sql: 'INSERT INTO budgets (user_id, category, month, amount, threshold, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    args: [userId, category, month, amount, threshold, createdAt]
+  })
 
-  return findBudgetById(result.lastInsertRowid, userId)
+  return findBudgetById(Number(result.lastInsertRowid), userId)
 }
 
-export function updateBudget(id, userId, { category, month, amount, threshold }) {
-  getDatabase()
-    .prepare(
-      'UPDATE budgets SET category = ?, month = ?, amount = ?, threshold = COALESCE(?, threshold) WHERE id = ? AND user_id = ?'
-    )
-    .run(category, month, amount, threshold, id, userId)
+export async function updateBudget(id, userId, { category, month, amount, threshold }) {
+  await getTursoClient().execute({
+    sql: 'UPDATE budgets SET category = ?, month = ?, amount = ?, threshold = COALESCE(?, threshold) WHERE id = ? AND user_id = ?',
+    args: [category, month, amount, threshold, id, userId]
+  })
 
   return findBudgetById(id, userId)
 }
 
-export function deleteBudget(id, userId) {
-  return getDatabase().prepare('DELETE FROM budgets WHERE id = ? AND user_id = ?').run(id, userId)
+export async function deleteBudget(id, userId) {
+  return getTursoClient().execute({
+    sql: 'DELETE FROM budgets WHERE id = ? AND user_id = ?',
+    args: [id, userId]
+  })
 }
 
 export function toPublicBudget(budget) {

@@ -4,7 +4,8 @@ import Database from 'better-sqlite3'
 import { initSchema, seedCategoriesFromTransactions } from './schema.js'
 
 const isTest = process.env.NODE_ENV === 'test'
-const dbPath = process.env.DB_PATH || path.resolve(process.cwd(), 'data', 'finanzas.db')
+const defaultDbPath = process.env.VERCEL ? path.resolve('/tmp', 'finanzas.db') : path.resolve(process.cwd(), 'data', 'finanzas.db')
+const dbPath = process.env.DB_PATH || defaultDbPath
 
 let database
 

@@ -1,17 +1,13 @@
 {
-  "name": "finanzasapp-backend",
+  "name": "finanzasapp-vercel",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
-    "lint": "eslint .",
-    "test": "vitest run"
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
@@ -21,11 +17,5 @@
     "nodemailer": "^9.0.6",
     "pdfkit": "^0.19.1",
     "@libsql/client": "^0.18.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.8.1",
-    "globals": "^17.11.0",
-    "vitest": "^4.1.11"
   }
 }

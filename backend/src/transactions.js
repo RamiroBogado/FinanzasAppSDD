@@ -1,4 +1,4 @@
-import { getDatabase } from './db.js'
+import { getTursoClient } from './turso.js'
 
 const LIST_QUERY = 'SELECT * FROM transactions WHERE user_id = ?'
 const COUNT_QUERY = 'SELECT COUNT(*) as count FROM transactions WHERE user_id = ?'
@@ -7,17 +7,16 @@ const ORDER_BY = ' ORDER BY date DESC, id DESC'
 function getMissingMonths(from, to) {
   const months = []
   if (!from) return months
-  
+
   let [fromYear, fromMonth] = from.split('-').map(Number)
   const [toYear, toMonth] = to.split('-').map(Number)
-  
-  // Empezar desde el mes SIGUIENTE al último procesado
+
   fromMonth++
   if (fromMonth > 12) {
     fromMonth = 1
     fromYear++
   }
-  
+
   while (fromYear < toYear || (fromYear === toYear && fromMonth <= toMonth)) {
     months.push(`${fromYear}-${String(fromMonth).padStart(2, '0')}`)
     fromMonth++
@@ -49,7 +48,7 @@ function addMonth(month, n) {
   return `${year}-${String(m).padStart(2, '0')}`
 }
 
-export function listTransactions(userId, filters = {}) {
+export async function listTransactions(userId, filters = {}) {
   const { type, category, q, from, to, limit = 50, offset = 0 } = filters
   const conditions = []
   const params = [userId]
@@ -82,16 +81,30 @@ export function listTransactions(userId, filters = {}) {
   const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
   const query = `${LIST_QUERY} ${whereClause}${ORDER_BY} LIMIT ? OFFSET ?`
   const countQuery = `${COUNT_QUERY} ${whereClause}`
+  const client = getTursoClient()
 
-  const countParams = params.slice(1) // remove userId for count
-  const total = getDatabase().prepare(countQuery).get(userId, ...countParams).count
+  const countResult = await client.execute({
+    sql: countQuery,
+    args: params
+  })
+  const total = Number(countResult.rows[0]?.count ?? 0)
 
-  const data = getDatabase().prepare(query).all(...params, Math.min(parseInt(limit) || 50, 200), parseInt(offset) || 0)
+  const dataResult = await client.execute({
+    sql: query,
+    args: [...params, Math.min(parseInt(limit) || 50, 200), parseInt(offset) || 0]
+  })
 
-  return { data, total, limit: Math.min(parseInt(limit) || 50, 200), offset: parseInt(offset) || 0 }
+  const data = dataResult.rows.map(row => ({ ...row, id: Number(row.id), user_id: Number(row.user_id) }))
+
+  return {
+    data,
+    total,
+    limit: Math.min(parseInt(limit) || 50, 200),
+    offset: parseInt(offset) || 0
+  }
 }
 
-export function countTransactions(userId, filters = {}) {
+export async function countTransactions(userId, filters = {}) {
   const { type, category, q, from, to } = filters
   const conditions = []
   const params = [userId]
@@ -123,72 +136,87 @@ export function countTransactions(userId, filters = {}) {
 
   const whereClause = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : ''
   const countQuery = `${COUNT_QUERY} ${whereClause}`
-
-  return getDatabase().prepare(countQuery).get(...params.slice(1)).count
+  const result = await getTursoClient().execute({ sql: countQuery, args: params })
+  return Number(result.rows[0]?.count ?? 0)
 }
 
-export function findTransactionById(id, userId) {
-  return getDatabase()
-    .prepare('SELECT * FROM transactions WHERE id = ? AND user_id = ?')
-    .get(id, userId)
+export async function findTransactionById(id, userId) {
+  const result = await getTursoClient().execute({
+    sql: 'SELECT * FROM transactions WHERE id = ? AND user_id = ?',
+    args: [id, userId]
+  })
+  const row = result.rows[0]
+  return row ? { ...row, id: Number(row.id), user_id: Number(row.user_id) } : undefined
 }
 
-export function updateTransaction(id, userId, { type, amount, date, description, category }) {
-  getDatabase()
-    .prepare(
-      'UPDATE transactions SET type = ?, amount = ?, date = ?, description = ?, category = ? WHERE id = ? AND user_id = ?'
-    )
-    .run(type, amount, date, description ?? null, category ?? null, id, userId)
+export async function updateTransaction(id, userId, { type, amount, date, description, category }) {
+  await getTursoClient().execute({
+    sql: 'UPDATE transactions SET type = ?, amount = ?, date = ?, description = ?, category = ? WHERE id = ? AND user_id = ?',
+    args: [type, amount, date, description ?? null, category ?? null, id, userId]
+  })
 
   return findTransactionById(id, userId)
 }
 
-export function deleteTransaction(id, userId) {
-  return getDatabase().prepare('DELETE FROM transactions WHERE id = ? AND user_id = ?').run(id, userId)
+export async function deleteTransaction(id, userId) {
+  return getTursoClient().execute({
+    sql: 'DELETE FROM transactions WHERE id = ? AND user_id = ?',
+    args: [id, userId]
+  })
 }
 
-export function getMonthlyBalance(userId, month) {
-  const db = getDatabase()
+export async function getMonthlyBalance(userId, month) {
+  const client = getTursoClient()
   const start = `${month}-01`
   const [year, m] = month.split('-').map(Number)
   const end = new Date(year, m, 0).toISOString().slice(0, 10)
-  
-  const income = db.prepare(`
-    SELECT COALESCE(SUM(amount), 0) as total FROM transactions
-    WHERE user_id = ? AND type = 'income' AND date >= ? AND date <= ?
-  `).get(userId, start, end).total
-  
-  const expense = db.prepare(`
-    SELECT COALESCE(SUM(amount), 0) as total FROM transactions
-    WHERE user_id = ? AND type = 'expense' AND date >= ? AND date <= ?
-  `).get(userId, start, end).total
-  
-  return income - expense
+
+  const incomeResult = await client.execute({
+    sql: `
+      SELECT COALESCE(SUM(amount), 0) as total FROM transactions
+      WHERE user_id = ? AND type = 'income' AND date >= ? AND date <= ?
+    `,
+    args: [userId, start, end]
+  })
+
+  const expenseResult = await client.execute({
+    sql: `
+      SELECT COALESCE(SUM(amount), 0) as total FROM transactions
+      WHERE user_id = ? AND type = 'expense' AND date >= ? AND date <= ?
+    `,
+    args: [userId, start, end]
+  })
+
+  return Number(incomeResult.rows[0]?.total ?? 0) - Number(expenseResult.rows[0]?.total ?? 0)
 }
 
-export function createRolloverIfNeeded(userId) {
-  const db = getDatabase()
+export async function createRolloverIfNeeded(userId) {
+  const client = getTursoClient()
   const currentMonth = new Date().toISOString().slice(0, 7)
-  
-  const tracking = db.prepare('SELECT last_processed_month FROM rollover_tracking WHERE user_id = ?').get(userId)
+
+  const trackingResult = await client.execute({
+    sql: 'SELECT last_processed_month FROM rollover_tracking WHERE user_id = ?',
+    args: [userId]
+  })
+  const tracking = trackingResult.rows[0]
   const lastProcessed = tracking?.last_processed_month || null
-  
+
   const targetMonth = previousMonth(currentMonth)
   const monthsToProcess = getMissingMonths(lastProcessed, targetMonth)
-  
-  // If no tracking exists, initialize it to targetMonth (don't create retroactive rollovers for new users)
+
   if (!tracking) {
-    db.prepare(`
-      INSERT OR REPLACE INTO rollover_tracking (user_id, last_processed_month) VALUES (?, ?)
-    `).run(userId, targetMonth)
+    await client.execute({
+      sql: 'INSERT OR REPLACE INTO rollover_tracking (user_id, last_processed_month) VALUES (?, ?)',
+      args: [userId, targetMonth]
+    })
     return
   }
-  
+
   for (const month of monthsToProcess) {
-    const balance = getMonthlyBalance(userId, month)
+    const balance = await getMonthlyBalance(userId, month)
     if (balance !== 0) {
       const nextMonth = addMonth(month, 1)
-      createTransaction({
+      await createTransaction({
         userId,
         type: balance > 0 ? 'income' : 'expense',
         amount: Math.abs(balance),
@@ -198,21 +226,22 @@ export function createRolloverIfNeeded(userId) {
         goal_id: null
       })
     }
-    db.prepare(`
-      INSERT OR REPLACE INTO rollover_tracking (user_id, last_processed_month) VALUES (?, ?)
-    `).run(userId, month)
+
+    await client.execute({
+      sql: 'INSERT OR REPLACE INTO rollover_tracking (user_id, last_processed_month) VALUES (?, ?)',
+      args: [userId, month]
+    })
   }
 }
 
-export function createTransaction({ userId, type, amount, date, description, category, goal_id = null }) {
+export async function createTransaction({ userId, type, amount, date, description, category, goal_id = null }) {
   const createdAt = new Date().toISOString().slice(0, 10)
-  const result = getDatabase()
-    .prepare(
-      'INSERT INTO transactions (user_id, type, amount, date, description, category, goal_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    )
-    .run(userId, type, amount, date, description ?? null, category ?? null, goal_id, createdAt)
+  const result = await getTursoClient().execute({
+    sql: 'INSERT INTO transactions (user_id, type, amount, date, description, category, goal_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [userId, type, amount, date, description ?? null, category ?? null, goal_id, createdAt]
+  })
 
-  return findTransactionById(result.lastInsertRowid, userId)
+  return findTransactionById(Number(result.lastInsertRowid), userId)
 }
 
 export function toPublicTransaction(transaction) {

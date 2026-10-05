@@ -1,5 +1,12 @@
 schema: spec-driven
 
+testing:
+  strict_tdd: false
+  workspace_command: none
+  backend: npm test
+  frontend: npm run lint + npm run build
+  ai: ".\\.venv\\Scripts\\python.exe -m pytest -q"
+
 context: |
   FinanzasApp es una aplicación web de finanzas personales multiusuario desarrollada como monorepo.
 

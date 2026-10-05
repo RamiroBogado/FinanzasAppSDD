@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     env: {
-      NODE_ENV: 'test'
+      NODE_ENV: 'test',
+      TURSO_DATABASE_URL: 'file::memory:?cache=shared'
     }
   }
 })

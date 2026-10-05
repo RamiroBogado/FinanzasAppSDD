@@ -114,7 +114,7 @@ router.get('/:id', async (req, res) => {
 })
 
 router.put('/:id', async (req, res) => {
-  const result = validatePayload(req.body, req.userId)
+  const result = await validatePayload(req.body, req.userId)
 
   if (result.error) {
     return res.status(400).json({ error: result.error })
@@ -129,7 +129,7 @@ router.put('/:id', async (req, res) => {
 
     res.json(toPublicBudget(budget))
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return res.status(409).json({ error: 'Ya existe un presupuesto para esa categoría y mes' })
     }
 

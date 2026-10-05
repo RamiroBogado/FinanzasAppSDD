@@ -2,24 +2,28 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import jwt from 'jsonwebtoken'
 import app from '../src/app.js'
 import { jwtSecret } from '../src/config.js'
-import { getDatabase } from '../src/db.js'
+import { getTursoClient } from '../src/turso.js'
 
 let server
 let baseUrl
 
 beforeEach(async () => {
-  const db = getDatabase()
-  db.prepare('DELETE FROM chat_action_audit').run()
-  db.prepare('DELETE FROM chat_action_requests').run()
-  db.prepare('DELETE FROM chat_messages').run()
-  db.prepare('DELETE FROM alerts').run()
-  db.prepare('DELETE FROM goals').run()
-  db.prepare('DELETE FROM budgets').run()
-  db.prepare('DELETE FROM categories').run()
-  db.prepare('DELETE FROM transactions').run()
-  db.prepare('DELETE FROM rollover_tracking').run()
-  db.prepare('DELETE FROM password_reset_tokens').run()
-  db.prepare('DELETE FROM users').run()
+  const client = getTursoClient()
+  for (const table of [
+    'chat_action_audit',
+    'chat_action_requests',
+    'chat_messages',
+    'alerts',
+    'goals',
+    'budgets',
+    'categories',
+    'transactions',
+    'rollover_tracking',
+    'password_reset_tokens',
+    'users'
+  ]) {
+    await client.execute(`DELETE FROM ${table}`)
+  }
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
 })
@@ -65,7 +69,8 @@ describe('registro', () => {
     expect(getData(body)).toMatchObject({ username: 'rama', email: 'rama@example.com' })
     expect(body).not.toHaveProperty('token')
 
-    const stored = getDatabase().prepare('SELECT * FROM users WHERE username = ?').get('rama')
+    const result = await getTursoClient().execute({ sql: 'SELECT * FROM users WHERE username = ?', args: ['rama'] })
+    const stored = result.rows[0]
     expect(stored.password_hash).not.toBe('secret123')
     expect(stored.password_hash).toMatch(/^\$2/)
   })
@@ -96,7 +101,8 @@ describe('registro', () => {
   it('no almacena la contraseña en texto plano', async () => {
     await registerUser()
 
-    const stored = getDatabase().prepare('SELECT password_hash FROM users WHERE username = ?').get('rama')
+    const result = await getTursoClient().execute({ sql: 'SELECT password_hash FROM users WHERE username = ?', args: ['rama'] })
+    const stored = result.rows[0]
     expect(stored.password_hash).not.toBe('secret123')
     expect(stored.password_hash).not.toContain('secret123')
   })
@@ -110,7 +116,8 @@ describe('login', () => {
       body: { username: 'rama', password: 'secret123' }
     })
 
-    const stored = getDatabase().prepare('SELECT id FROM users WHERE username = ?').get('rama')
+    const result = await getTursoClient().execute({ sql: 'SELECT id FROM users WHERE username = ?', args: ['rama'] })
+    const stored = result.rows[0]
 
     expect(status).toBe(200)
     expect(typeof body.token).toBe('string')

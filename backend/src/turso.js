@@ -11,14 +11,13 @@ export function getTursoClient() {
       throw new Error('TURSO_DATABASE_URL environment variable is required')
     }
 
-    if (!authToken) {
+    if (!authToken && !url.startsWith('file:')) {
       throw new Error('TURSO_AUTH_TOKEN environment variable is required')
     }
 
-    client = createClient({
-      url,
-      authToken
-    })
+    client = createClient(
+      authToken ? { url, authToken } : { url }
+    )
   }
 
   return client

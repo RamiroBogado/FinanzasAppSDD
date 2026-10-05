@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import app from '../src/app.js'
-import { getDatabase } from '../src/db.js'
+import { getTursoClient } from '../src/turso.js'
 
 describe('bootstrap', () => {
-  it('opens an in-memory database in test environment', () => {
-    expect(getDatabase().name).toBe(':memory:')
+  it('exposes a single client with the schema initialized', async () => {
+    expect(getTursoClient()).toBe(getTursoClient())
+    const result = await getTursoClient().execute(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'users'"
+    )
+    expect(result.rows).toHaveLength(1)
   })
 
   it('responds on /health', async () => {

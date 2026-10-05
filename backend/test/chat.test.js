@@ -1,5 +1,6 @@
 import http from 'node:http'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { getTursoClient } from '../src/turso.js'
 
 let app
 let aiStub
@@ -44,11 +45,10 @@ let server
 let baseUrl
 
 beforeEach(async () => {
-  const { getDatabase } = await import('../src/db.js')
-  getDatabase().prepare('DELETE FROM chat_messages').run()
-  getDatabase().prepare('DELETE FROM budgets').run()
-  getDatabase().prepare('DELETE FROM transactions').run()
-  getDatabase().prepare('DELETE FROM users').run()
+  const client = getTursoClient()
+  for (const table of ['chat_messages', 'budgets', 'transactions', 'users']) {
+    await client.execute(`DELETE FROM ${table}`)
+  }
   aiCalls.length = 0
   aiAuthHeaders.length = 0
   stubBehavior = { status: 200, body: { reply: 'respuesta simulada' }, failConnection: false }

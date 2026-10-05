@@ -1,14 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import app from '../src/app.js'
-import { getDatabase } from '../src/db.js'
+import { getTursoClient } from '../src/turso.js'
 
 let server
 let baseUrl
 
 beforeEach(async () => {
-  getDatabase().prepare('DELETE FROM transactions').run()
-  getDatabase().prepare('DELETE FROM categories').run()
-  getDatabase().prepare('DELETE FROM users').run()
+  const client = getTursoClient()
+  for (const table of ['transactions', 'categories', 'users']) {
+    await client.execute(`DELETE FROM ${table}`)
+  }
   server = app.listen(0)
   baseUrl = `http://127.0.0.1:${server.address().port}`
 })

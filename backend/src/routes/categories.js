@@ -103,7 +103,7 @@ router.put('/:id', async (req, res) => {
     const category = await updateCategory(req.params.id, req.userId, result.value)
     res.json(category)
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (err.code === 'SQLITE_CONSTRAINT' || err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return res.status(400).json({ error: 'Ya existe una categoría con ese nombre' })
     }
     throw err

@@ -73,19 +73,19 @@ El asistente financiero es un **microservicio Python** (`ai/`) con **FastAPI**, 
 
 ## Model Context Protocol (MCP)
 
-Dos servidores MCP configurados en `opencode.json`:
+Tres servidores MCP configurados en `opencode.json`:
 
 ### 1. Filesystem Server (Local)
 - **Fuente**: `@modelcontextprotocol/server-filesystem`
 - **Rol**: Leer/escribir archivos del proyecto, exportar CSVs, gestionar configuración
 
-### 2. Database Server (Externo)  
-- **Fuente**: `@modelcontextprotocol/server-sqlite`
-- **Rol**: Consultar directamente la base de datos SQLite para análisis y debugging
-
-### 3. GitHuhMCP (Externo)  
-- **Fuente**: `@modelcontextprotocol/server-sqlite](https://api.githubcopilot.com/mcp/`
+### 2. GitHub MCP (Remoto)
+- **Fuente**: `https://api.githubcopilot.com/mcp/`
 - **Rol**: Control de GitHub a través de un agente
+
+### 3. Stitch MCP (Remoto)
+- **Fuente**: `https://stitch.googleapis.com/mcp`
+- **Rol**: Generación y gestión de diseños de interfaz
 
 ---
 
@@ -104,9 +104,9 @@ Cada cambio funcional pasa por:
 
 | Change | Commit | PR | Descripción |
 |--------|--------|----|-------------|
-| `bootstrap-project` | 89425f0 | #17 | Setup monorepo, Docker, CI |
-| `user-auth` | d4c9d44 | #19 | Registro, login JWT, password reset |
-| `categories-filters` | 9287899 | #21 | CRUD categorías, filtros transacciones |
+| `bootstrap-project` | - | - | Setup monorepo, Docker, CI |
+| `user-auth` | - | - | Registro, login JWT, password reset |
+| `categories-filters` | - | - | CRUD categorías, filtros transacciones |
 | `dashboard-budgets` | - | - | Dashboard gráficos, presupuestos mensuales |
 | `transactions` | - | - | CRUD transacciones, búsqueda, paginación |
 | `modern-ui` | - | - | Rediseño UI con Stitch, Tailwind |
@@ -136,8 +136,8 @@ Cada cambio funcional pasa por:
 FinanzasAppSDD/
 ├── backend/                    # API REST (Node.js + Express 5 ESM)
 │   ├── src/
-│   │   ├── routes/             # auth, users, categories, transactions, budgets, goals, alerts, chat, export
-│   │   ├── middleware/         # auth.js (JWT verification)
+│   │   ├── routes/             # auth, alerts, budgets, categories, chat, goals, transactions
+│   │   ├── middleware/         # requireAuth.js (JWT verification)
 │   │   ├── app.js              # Express setup, Helmet, CORS, rate-limit, error handling
 │   │   ├── server.js           # Entry point
 │   │   ├── db.js               # SQLite connection (WAL mode)
@@ -147,7 +147,6 @@ FinanzasAppSDD/
 │   │   ├── transactions.js     # Transactions service + rollover logic
 │   │   ├── budgets.js          # Budgets service
 │   │   ├── goals.js            # Goals service + atomic movements
-│   │   ├── alerts.js           # Alerts service
 │   │   ├── exporters.js        # CSV export
 │   │   ├── chat.js             # Chat history persistence
 │   │   └── chatActions.js      # Action proposals: create, confirm, cancel, audit
@@ -165,10 +164,9 @@ FinanzasAppSDD/
 │   │   ├── knowledge.py        # Knowledge base chunks (static)
 │   │   ├── vectorstore.py      # VectorStoreProvider (ChromaDB), BM25VectorStore, ChatHistoryVectorStore
 │   │   └── __init__.py
-│   ├── requirements.txt        # fastapi, langchain, chromadb, sentence-transformers, rank-bm25, ollama, etc.
-│   ├── requirements-dev.txt    # pytest, pytest-mock
-│   ├── tests/                  # 61 tests: app, hybrid_search, knowledge, reranker, eval, fewshot, tools, observability, cache
-│   ├── eval/                   # Golden dataset (100 cases), eval CLI, CI gate (faithfulness≥0.8, recall@5≥0.7)
+│   ├── requirements.txt        # fastapi, uvicorn, langchain, langchain-ollama, numpy, pyjwt, chromadb
+│   ├── requirements-dev.txt    # pytest, httpx
+│   ├── tests/                  # app, chat, config, indexer, knowledge, vectorstore
 │   ├── knowledge/              # Markdown source for knowledge base
 │   └── Dockerfile
 │
@@ -281,14 +279,11 @@ cd frontend && npm run lint && npm run build
 # AI Service (61 tests)
 cd ai && .venv\Scripts\python.exe -m pytest -q   # Windows
 # cd ai && .venv/bin/python -m pytest -q        # Linux/macOS
-
-# Evaluación RAG (golden dataset 100 casos)
-cd ai && .venv\Scripts\python.exe scripts/eval.py --help
 ```
 
-### CI Gates (GitHub Actions)
+### Verificación local por capa
 - Backend: lint + test
-- AI: pytest + eval (faithfulness ≥ 0.8, recall@5 ≥ 0.7 - warning mode)
+- AI: pytest
 - Frontend: lint + build
 
 ---

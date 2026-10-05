@@ -6,7 +6,7 @@ services:
     environment:
       NODE_ENV: production
       DB_PATH: /app/data/finanzas.db
-      JWT_SECRET: finanzasapp-dev-secret
+      JWT_SECRET: ${JWT_SECRET}
       AI_SERVICE_URL: http://ai:3002
     volumes:
       - finanzas_data:/app/data
@@ -17,7 +17,7 @@ services:
       - "3002:3002"
     environment:
       OLLAMA_HOST: http://ollama:11434
-      JWT_SECRET: finanzasapp-dev-secret
+      JWT_SECRET: ${JWT_SECRET}
       DB_PATH: /app/data/finanzas.db
       VECTOR_STORE: chroma
       CHROMA_PATH: /app/chroma

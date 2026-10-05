@@ -151,8 +151,7 @@ router.post('/forgot-password', async (req, res) => {
       console.error('Error enviando email de reset:', err)
     }
   } else {
-    // Desarrollo: loguear token en consola
-    console.log('[DEV RESET TOKEN]', { email: normalizedEmail, token: resetToken })
+    console.log('[DEV RESET] password reset requested', { email: normalizedEmail })
   }
 
   res.json(genericResponse)

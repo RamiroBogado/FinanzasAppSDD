@@ -4,12 +4,11 @@ import jwt
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import JWT_SECRET as SECRET
 from app.indexer import UserIndex
 from app.main import app
 
 client = TestClient(app)
-
-SECRET = "finanzasapp-dev-secret"
 
 
 def auth_header(user_id: int = 1) -> dict:

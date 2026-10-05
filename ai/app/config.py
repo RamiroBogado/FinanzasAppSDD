@@ -1,10 +1,16 @@
 import os
+import sys
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = "llama3.1:8b"
 EMBEDDING_MODEL = "nomic-embed-text"
 
-JWT_SECRET = os.getenv("JWT_SECRET", "finanzasapp-dev-secret")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("ENV") == "test" or "pytest" in sys.modules:
+        JWT_SECRET = "test-secret"
+    else:
+        raise RuntimeError("JWT_SECRET environment variable is required")
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.getenv(

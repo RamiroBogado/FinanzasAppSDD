@@ -1,10 +1,10 @@
 const jwtSecretEnv = process.env.JWT_SECRET
 
-if (!jwtSecretEnv && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable is required in production')
+if (!jwtSecretEnv && process.env.NODE_ENV !== 'test') {
+  throw new Error('JWT_SECRET environment variable is required')
 }
 
-export const jwtSecret = jwtSecretEnv ?? (process.env.NODE_ENV === 'test' ? 'test-secret' : 'finanzasapp-dev-secret')
+export const jwtSecret = jwtSecretEnv ?? 'test-secret'
 
 export const jwtExpiresIn = process.env.JWT_EXPIRES_IN || '24h'
 

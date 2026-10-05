@@ -102,7 +102,7 @@ COLOR_NAMES = {
 
 
 def _parse_amount(text: str) -> int | None:
-    match = re.search(r"\$?\s*(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?|\d+(?:,\d{1,2})?)", text)
+    match = re.search(r"\$?\s*(\d+(?:\.\d{3})*(?:,\d{1,2})?|\d+(?:,\d{1,2})?)", text)
     if not match:
         return None
 
